@@ -7,8 +7,7 @@ import java.util.List;
 
 public class Manager {
     private List<Entity> students;
-    private String filename;
-    private Manager() {}
+    private final String filename;
     public Manager(String filename) {
         this.filename = filename;
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
@@ -71,12 +70,13 @@ public class Manager {
     }
 
     public void exportToCSV(String csvFilename) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(csvFilename))) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(csvFilename, false))) {
             writer.println("ID,Name,Score,Image,Address,Note");
             for (Entity student : students) {
                 writer.printf("%s,%s,%.2f,%s,%s,%s%n", student.getId(), student.getName(), student.getScore(),
                         student.getImage(), student.getAddress(), student.getNote());
             }
+            writer.flush();
             System.out.println("Export successful!");
         } catch (IOException e) {
             System.out.println("Error exporting CSV: " + e.getMessage());
