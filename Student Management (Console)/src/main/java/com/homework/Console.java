@@ -1,0 +1,105 @@
+package com.homework;
+
+import com.homework.student.Entity;
+import com.homework.student.Manager;
+import com.homework.student.UpdateRequest;
+
+import java.util.Scanner;
+
+public class Console {
+    private final Manager manager;
+    private final Scanner scanner;
+    public Console(Manager manager, Scanner scanner) {
+        this.manager = manager;
+        this.scanner = scanner;
+    }
+
+    public void addStudent() {
+        System.out.print("Enter ID: ");
+        String id = scanner.nextLine();
+        System.out.print("Enter Name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter Score: ");
+        double score = scanner.nextDouble();
+        scanner.nextLine(); // Consume newline
+        System.out.print("Enter Image Path: ");
+        String image = scanner.nextLine();
+        System.out.print("Enter Address: ");
+        String address = scanner.nextLine();
+        System.out.print("Enter Note: ");
+        String note = scanner.nextLine();
+
+        manager.add(new Entity(id, name, score, image, address, note));
+        System.out.println("Student added successfully!");
+    }
+
+    public void updateStudent() {
+        System.out.print("Enter Student ID to update: ");
+        String id = scanner.nextLine();
+        System.out.print("Enter new Name (or press Enter to skip): ");
+        String newName = scanner.nextLine();
+        System.out.print("Enter new Score (-1 to skip): ");
+        Double newScore = scanner.nextDouble();
+        scanner.nextLine(); // Consume newline
+        System.out.print("Enter new Image Path (or press Enter to skip): ");
+        String newImage = scanner.nextLine();
+        System.out.print("Enter new Address (or press Enter to skip): ");
+        String newAddress = scanner.nextLine();
+        System.out.print("Enter new Note (or press Enter to skip): ");
+        String newNote = scanner.nextLine();
+
+        UpdateRequest updateRequest = new UpdateRequest.Builder()
+                .name(newName)
+                .score(newScore)
+                .image(newImage)
+                .address(newAddress)
+                .note(newNote).build();
+
+        if (manager.update(id, updateRequest)) {
+            System.out.println("Student updated successfully!");
+        } else {
+            System.out.println("Student ID not found!");
+        }
+    }
+
+    public void deleteStudent() {
+        System.out.print("Enter Student ID to delete: ");
+        String id = scanner.nextLine();
+        if (manager.delete(id)) {
+            System.out.println("Student deleted successfully!");
+        } else {
+            System.out.println("Student ID not found!");
+        }
+    }
+
+    public void viewStudents() {
+        System.out.println("\nSort by:");
+        System.out.println("1. ID Ascending");
+        System.out.println("2. ID Descending");
+        System.out.println("3. Score Ascending");
+        System.out.println("4. Score Descending");
+        System.out.print("Choose an option: ");
+
+        int sortChoice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        switch (sortChoice) {
+            case 1:
+                manager.sortByIdAscending();
+                break;
+            case 2:
+                manager.sortByIdDescending();
+                break;
+            case 3:
+                manager.sortByScoreAscending();
+                break;
+            case 4:
+                manager.sortByScoreDescending();
+                break;
+            default:
+                System.out.println("Invalid choice. Showing default list.");
+        }
+
+        manager.displayStudents();
+    }
+}
