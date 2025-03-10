@@ -1,0 +1,18 @@
+- Cài đặt JDK 21.
+- Từ đường dẫn thư mục gốc của project, chạy "java -jar .\target\exerciseone-1.0-SNAPSHOT.jar".
+- Chương trình hiện ra các lựa chọn để thực thi trên danh sách sinh viên (đánh số thứ tự từ 1 đến 7).
+-- Sau khi lựa chọn, chương trình sẽ hướng dẫn nhập dữ liệu.
+-- Các chức năng chính:
+--- Thêm sinh viên: Nhập ID, Tên, Điểm, Đường dẫn ảnh, Địa chỉ, và Ghi chú.
+--- Cập nhật sinh viên: Nhập ID sinh viên cần cập nhật, sau đó nhập thông tin mới hoặc bỏ qua bằng cách nhấn Enter.
+--- Xóa sinh viên: Nhập ID sinh viên cần xóa khỏi danh sách.
+--- Xem danh sách sinh viên: Chọn cách sắp xếp theo ID hoặc Điểm (Tăng/Giảm dần).
+--- Xuất danh sách ra CSV: Nhập tên file để lưu danh sách sinh viên dưới dạng CSV.
+--- Nhập danh sách từ CSV: Nhập tên file để tải danh sách sinh viên từ CSV.
+--- Thoát chương trình.
+
+
+
+
+
+

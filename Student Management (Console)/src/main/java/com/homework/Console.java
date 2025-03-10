@@ -103,16 +103,40 @@ public class Console {
         manager.displayStudents();
     }
 
-    public boolean importStudentsFromCSV(String fileName) {
-        if (fileName == null || fileName.trim().isBlank()) {
+    public boolean importStudentsFromCSV() {
+        System.out.print("Enter filename to import (or press Enter for default 'import.csv'): ");
+        String fileName = scanner.nextLine().trim();
+        if (fileName.isBlank()) {
             fileName = "import.csv";
+        } else if (!fileName.toLowerCase().endsWith(".csv")) {
+            fileName += ".csv";
         }
-        return manager.importFromCSV(fileName);
+
+        if (manager.importFromCSV(fileName)) {
+            System.out.println("Students imported successfully from " + fileName);
+            return true;
+        } else {
+            System.out.println("Failed to import students from " + fileName);
+            return false;
+        }
     }
-    public boolean exportStudentsToCSV(String fileName) {
-        if (fileName == null || fileName.trim().isBlank()) {
+
+    public boolean exportStudentsToCSV() {
+        System.out.print("Enter filename to export (or press Enter for default 'export.csv'): ");
+        String fileName = scanner.nextLine().trim();
+        if (fileName.isBlank()) {
             fileName = "export.csv";
+        } else if (!fileName.toLowerCase().endsWith(".csv")) {
+            fileName += ".csv";
         }
-        return manager.exportToCSV(fileName);
+
+        if (manager.exportToCSV(fileName)) {
+            System.out.println("Students exported successfully to " + fileName);
+            return true;
+        } else {
+            System.out.println("Failed to export students to " + fileName);
+            return false;
+        }
     }
+
 }

@@ -89,7 +89,8 @@ public class Manager {
             while ((line = reader.readLine()) != null) {
                 String[] data = line.split(",");
                 if (data.length == 6) {
-                    students.add(new Entity(data[0], data[1], Double.parseDouble(data[2]), data[3], data[4], data[5]));
+                    Entity student = new Entity(data[0], data[1], Double.parseDouble(data[2]), data[3], data[4], data[5]);
+                    this.add(student);
                 }
             }
             saveToFile();

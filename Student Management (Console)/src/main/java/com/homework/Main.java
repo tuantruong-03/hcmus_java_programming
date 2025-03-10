@@ -9,6 +9,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         Manager manager = new Manager("students.dat");
         Console console = new Console(manager, scanner);
+        manager.initData();
 
         while (true) {
             System.out.println("\nStudent Management System");
@@ -38,10 +39,10 @@ public class Main {
                     console.viewStudents();
                     break;
                 case 5:
-                    manager.exportToCSV("students.csv");
+                    console.exportStudentsToCSV();
                     break;
                 case 6:
-                    manager.importFromCSV("students.csv");
+                    console.importStudentsFromCSV();
                     break;
                 case 7:
                     System.out.println("Exiting...");
