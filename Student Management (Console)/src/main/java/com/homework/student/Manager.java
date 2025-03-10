@@ -22,19 +22,16 @@ public class Manager {
             this.students = new ArrayList<>();
         }
     }
-    public void add(Entity student) {
+
+    public boolean add(Entity student) {
+        if (students.stream().anyMatch(s -> s.getId().equals(student.getId()))) {
+            System.out.println("Student already exists with ID " + student.getId());
+            return false;
+        }
         students.add(student);
         saveToFile();
+        return true;
     }
-
-    private void saveToFile() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
-            oos.writeObject(students);
-        } catch (IOException ex) {
-            System.out.println("Error saving to file: " + ex.getMessage());
-        }
-    }
-
 
     public boolean update(String id, UpdateRequest updateStudentRequest) {
         for (Entity student : students) {
@@ -69,7 +66,7 @@ public class Manager {
         return removed;
     }
 
-    public void exportToCSV(String csvFilename) {
+    public boolean exportToCSV(String csvFilename) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(csvFilename, false))) {
             writer.println("ID,Name,Score,Image,Address,Note");
             for (Entity student : students) {
@@ -78,12 +75,14 @@ public class Manager {
             }
             writer.flush();
             System.out.println("Export successful!");
+            return true;
         } catch (IOException e) {
             System.out.println("Error exporting CSV: " + e.getMessage());
+            return false;
         }
     }
 
-    public void importFromCSV(String csvFilename) {
+    public boolean importFromCSV(String csvFilename) {
         try (BufferedReader reader = new BufferedReader(new FileReader(csvFilename))) {
             String line;
             reader.readLine(); // Skip header
@@ -95,8 +94,18 @@ public class Manager {
             }
             saveToFile();
             System.out.println("Import successful!");
+            return true;
         } catch (IOException | NumberFormatException e) {
             System.out.println("Error importing CSV: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void saveToFile() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(students);
+        } catch (IOException ex) {
+            System.out.println("Error saving to file: " + ex.getMessage());
         }
     }
 
@@ -120,5 +129,21 @@ public class Manager {
         for (Entity student : students) {
             System.out.println(student);
         }
+    }
+
+    public void initData() {
+        List<Entity> students = List.of(
+                new Entity("S001", "Alice Johnson", 8.5, "alice.jpg", "123 Main St", "Excellent student"),
+                new Entity("S002", "Bob Smith", 7.2, "bob.jpg", "456 Oak St", "Needs improvement in math"),
+                new Entity("S003", "Charlie Brown", 9.1, "charlie.jpg", "789 Pine St", "Great in science"),
+                new Entity("S004", "David Wilson", 6.8, "david.jpg", "321 Birch St", "Struggles with history"),
+                new Entity("S005", "Emma Davis", 8.9, "emma.jpg", "654 Cedar St", "Active in sports"),
+                new Entity("S006", "Frank Miller", 7.5, "frank.jpg", "987 Maple St", "Good at coding"),
+                new Entity("S007", "Grace Lee", 9.3, "grace.jpg", "741 Walnut St", "Top of the class"),
+                new Entity("S008", "Henry Adams", 5.9, "henry.jpg", "852 Elm St", "Needs more practice"),
+                new Entity("S009", "Ivy Thomas", 8.1, "ivy.jpg", "963 Spruce St", "Very creative"),
+                new Entity("S010", "Jack White", 7.7, "jack.jpg", "147 Redwood St", "Enjoys group projects")
+        );
+        students.forEach(this::add);
     }
 }

@@ -46,6 +46,18 @@ public class UpdateRequest {
                 '}';
     }
 
+    public boolean validate() {
+        if (name == null || name.trim().isEmpty()) {
+            System.out.println("Validation failed: Name must not be blank.");
+            return false;
+        }
+        if (score == null || score <= 0 || score > 10) {
+            System.out.println("Validation failed: Score must be between 0 and 10.");
+            return false;
+        }
+        return true;
+    }
+
     public static class Builder {
         private String name;
         private Double score;

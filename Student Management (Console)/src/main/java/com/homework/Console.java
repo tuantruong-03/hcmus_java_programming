@@ -28,9 +28,9 @@ public class Console {
         String address = scanner.nextLine();
         System.out.print("Enter Note: ");
         String note = scanner.nextLine();
-
-        manager.add(new Entity(id, name, score, image, address, note));
-        System.out.println("Student added successfully!");
+        if (manager.add(new Entity(id, name, score, image, address, note))) {
+            System.out.println("Student added successfully!");
+        }
     }
 
     public void updateStudent() {
@@ -101,5 +101,18 @@ public class Console {
         }
 
         manager.displayStudents();
+    }
+
+    public boolean importStudentsFromCSV(String fileName) {
+        if (fileName == null || fileName.trim().isBlank()) {
+            fileName = "import.csv";
+        }
+        return manager.importFromCSV(fileName);
+    }
+    public boolean exportStudentsToCSV(String fileName) {
+        if (fileName == null || fileName.trim().isBlank()) {
+            fileName = "export.csv";
+        }
+        return manager.exportToCSV(fileName);
     }
 }
