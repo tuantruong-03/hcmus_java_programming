@@ -4,6 +4,7 @@ import com.homework.student.Entity;
 import com.homework.student.Manager;
 import com.homework.student.UpdateRequest;
 
+import java.nio.DoubleBuffer;
 import java.util.Scanner;
 
 public class Console {
@@ -19,9 +20,21 @@ public class Console {
         String id = scanner.nextLine();
         System.out.print("Enter Name: ");
         String name = scanner.nextLine();
-        System.out.print("Enter Score: ");
-        double score = scanner.nextDouble();
-        scanner.nextLine(); // Consume newline
+        double score;
+        while (true) {
+            System.out.print("Enter Score (0-10): ");
+            if (scanner.hasNextDouble()) {
+                score = scanner.nextDouble();
+                if (score >= 0 && score <= 10) {
+                    scanner.nextLine(); // Consume break line
+                    break;
+                }
+                System.out.println("Invalid score! Please enter a value between 0 and 10.");
+            } else {
+                System.out.println("Invalid input! Please enter a numeric value.");
+                scanner.next();
+            }
+        }
         System.out.print("Enter Image Path: ");
         String image = scanner.nextLine();
         System.out.print("Enter Address: ");
@@ -38,9 +51,27 @@ public class Console {
         String id = scanner.nextLine();
         System.out.print("Enter new Name (or press Enter to skip): ");
         String newName = scanner.nextLine();
-        System.out.print("Enter new Score (-1 to skip): ");
-        Double newScore = scanner.nextDouble();
-        scanner.nextLine(); // Consume newline
+        Double newScore;
+        while (true) {
+            System.out.print("Enter Score (0-10) or press Enter to skip: ");
+            String input = scanner.nextLine().trim(); // Read input and trim whitespace
+
+            if (input.isEmpty()) {
+                newScore = null; // User chose to skip
+                break;
+            }
+
+            try {
+                newScore = Double.parseDouble(input);
+                if (newScore >= 0 && newScore <= 10) {
+                    break;
+                } else {
+                    System.out.println("Invalid score! Please enter a value between 0 and 10.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a numeric value.");
+            }
+        }
         System.out.print("Enter new Image Path (or press Enter to skip): ");
         String newImage = scanner.nextLine();
         System.out.print("Enter new Address (or press Enter to skip): ");
@@ -61,6 +92,7 @@ public class Console {
             System.out.println("Student ID not found!");
         }
     }
+
 
     public void deleteStudent() {
         System.out.print("Enter Student ID to delete: ");
@@ -122,12 +154,22 @@ public class Console {
     }
 
     public boolean exportStudentsToCSV() {
-        System.out.print("Enter filename to export (or press Enter for default 'export.csv'): ");
-        String fileName = scanner.nextLine().trim();
-        if (fileName.isBlank()) {
-            fileName = "export.csv";
-        } else if (!fileName.toLowerCase().endsWith(".csv")) {
-            fileName += ".csv";
+        String fileName;
+        while (true) {
+            System.out.print("Enter filename to export (or press Enter for default 'export.csv'): ");
+            fileName = scanner.nextLine().trim();
+
+            if (fileName.isBlank()) {
+                fileName = "export.csv";
+            } else if (!fileName.toLowerCase().endsWith(".csv")) {
+                fileName += ".csv";
+            }
+
+            if (fileName.equalsIgnoreCase("import.csv") || fileName.equalsIgnoreCase("import")) {
+                System.out.println("Invalid filename. 'import.csv' is not allowed. Please choose a different name.");
+            } else {
+                break;
+            }
         }
 
         if (manager.exportToCSV(fileName)) {

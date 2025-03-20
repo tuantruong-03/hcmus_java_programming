@@ -39,7 +39,7 @@ public class Manager {
                 if (updateStudentRequest.getName() != null && !updateStudentRequest.getName().isBlank()) {
                     student.setName(updateStudentRequest.getName());
                 }
-                if (updateStudentRequest.getScore() != null) {
+                if (updateStudentRequest.getScore() != null && updateStudentRequest.getScore() >= 0 && updateStudentRequest.getScore() <= 10) {
                     student.setScore(updateStudentRequest.getScore());
                 }
                 if (updateStudentRequest.getImage() != null && !updateStudentRequest.getImage().isBlank()) {
@@ -133,7 +133,7 @@ public class Manager {
     }
 
     public void initData() {
-        List<Entity> students = List.of(
+        List<Entity> initStudents = List.of(
                 new Entity("S001", "Alice Johnson", 8.5, "alice.jpg", "123 Main St", "Excellent student"),
                 new Entity("S002", "Bob Smith", 7.2, "bob.jpg", "456 Oak St", "Needs improvement in math"),
                 new Entity("S003", "Charlie Brown", 9.1, "charlie.jpg", "789 Pine St", "Great in science"),
@@ -145,6 +145,6 @@ public class Manager {
                 new Entity("S009", "Ivy Thomas", 8.1, "ivy.jpg", "963 Spruce St", "Very creative"),
                 new Entity("S010", "Jack White", 7.7, "jack.jpg", "147 Redwood St", "Enjoys group projects")
         );
-        students.forEach(this::add);
+        initStudents.forEach(this::add);
     }
 }

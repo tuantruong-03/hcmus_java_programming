@@ -1,5 +1,9 @@
-- Cài đặt JDK 21.
-- Từ đường dẫn thư mục gốc của project, chạy "java -jar .\target\exerciseone-1.0-SNAPSHOT.jar".
+- Cài đặt JDK 21 (khác JDK chạy sẽ bị lỗi).
+- Đảm bảo file "exerciseone-1.0-SNAPSHOT.jar", "students.dat", "import.csv" cùng cấp độ thư mục.
+- Từ đường dẫn thư mục gốc (21120589), chạy "java -jar .\exerciseone-1.0-SNAPSHOT.jar".
+- Khởi tạo dữ liệu:
+-- Nếu không có file "students.dat", chương trình sẽ tự tạo ra 10 sinh viên và ghi xuống file "students.dat".
+-- Nếu đã có file "students.dat", chương trình sẽ đọc file "students.dat" và lưu dữ liệu.
 - Chương trình hiện ra các lựa chọn để thực thi trên danh sách sinh viên (đánh số thứ tự từ 1 đến 7).
 -- Sau khi lựa chọn, chương trình sẽ hướng dẫn nhập dữ liệu.
 -- Các chức năng chính:
@@ -10,9 +14,3 @@
 --- Xuất danh sách ra CSV: Nhập tên file để lưu danh sách sinh viên dưới dạng CSV.
 --- Nhập danh sách từ CSV: Nhập tên file để tải danh sách sinh viên từ CSV.
 --- Thoát chương trình.
-
-
-
-
-
-
