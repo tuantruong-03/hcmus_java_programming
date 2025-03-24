@@ -36,7 +36,8 @@ public class Student implements Serializable {
     }
 
     @Builder
-    public static class UpdateRequest {
+    @Getter
+    public static class UpdatePayload {
         private String name;
         private Double score;
         private String image;

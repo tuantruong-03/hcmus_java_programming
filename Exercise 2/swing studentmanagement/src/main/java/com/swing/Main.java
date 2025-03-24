@@ -1,9 +1,12 @@
 package com.swing;
 
+import com.swing.context.ApplicationContext;
+import com.swing.context.DatabaseConnectionForm;
 import com.swing.database.Database;
 import com.swing.models.Student;
-import com.swing.repository.StudentRepository;
-import com.swing.repository.query.Query;
+import com.swing.repository.student.StudentQuery;
+import com.swing.repository.student.StudentRepository;
+import com.swing.repository.student.StudentRepositoryImpl;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -12,12 +15,7 @@ import java.util.List;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) throws SQLException {
-        Database.ConnectionOptions opts = new Database.ConnectionOptions("jdbc:mysql://localhost:3306", "student_management"
-                ,"root"
-                , "Tuantruong131203");
-        Database db = new Database(opts);
-        StudentRepository repo = new StudentRepository(db);
-        test(repo);
+        DatabaseConnectionForm form = new DatabaseConnectionForm();
     }
 
     private static void test (StudentRepository repository) throws SQLException {
@@ -30,8 +28,9 @@ public class Main {
                 .build();
 
         // Test adding a student
-        repository.add(student);
-        List<Student> students = repository.findMany(Query.defaultInstance());
+        repository.create(student);
+        List<Student> students = repository.findMany(StudentQuery.defaultInstance());
+        repository.existsById(1);
 
     }
 }
