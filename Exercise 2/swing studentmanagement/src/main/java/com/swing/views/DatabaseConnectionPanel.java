@@ -20,6 +20,7 @@ public class DatabaseConnectionPanel extends JPanel {
         // Panel for input fields
         JPanel inputPanel = new JPanel(new GridLayout(4, 2, 10, 10));
 
+        // TODO: erase default value
         inputPanel.add(new JLabel("DB Server URL:"));
         urlField = new JTextField("jdbc:mysql://localhost:3306");
         inputPanel.add(urlField);
@@ -33,7 +34,7 @@ public class DatabaseConnectionPanel extends JPanel {
         inputPanel.add(userField);
 
         inputPanel.add(new JLabel("Password:"));
-        passwordField = new JPasswordField();
+        passwordField = new JPasswordField("Tuantruong131203");
         inputPanel.add(passwordField);
 
         // Centered Button Panel

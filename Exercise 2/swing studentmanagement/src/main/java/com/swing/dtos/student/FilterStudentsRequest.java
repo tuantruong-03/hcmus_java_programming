@@ -10,6 +10,7 @@ import java.util.Objects;
 @Getter
 public class FilterStudentsRequest {
     private String search;
+    private Long id;
     private Integer page;
     private Integer size;
     private String sortField;
@@ -27,7 +28,7 @@ public class FilterStudentsRequest {
                 super.page(0);
             }
             if (super.size == null || super.size <= 0) {
-                super.size(10);
+                super.size(100);
             }
             if (!Objects.equals(super.sortOrder, "ASC") && !Objects.equals(super.sortOrder, "DESC")) {
                 super.sortOrder = "ASC";

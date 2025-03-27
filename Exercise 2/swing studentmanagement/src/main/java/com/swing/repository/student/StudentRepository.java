@@ -11,6 +11,7 @@ public interface StudentRepository {
     public int deleteById(long id) throws SQLException;
 
     List<Student> findMany(StudentQuery query) throws SQLException;
+    Student findOne(StudentQuery query) throws SQLException;
 
     Boolean existsById(long id) throws SQLException;
 }
