@@ -1,17 +1,16 @@
 package com.swing.services.student;
 
-import com.swing.dtos.student.CreateStudentRequest;
-import com.swing.dtos.student.FilterStudentsRequest;
-import com.swing.dtos.student.UpdateStudentRequest;
+import com.swing.dtos.student.*;
 import com.swing.exceptions.DeleteResourceException;
 import com.swing.exceptions.InvalidInputsException;
 import com.swing.exceptions.UpdateResourceException;
-import com.swing.models.Student;
+import com.swing.repository.student.Student;
 import com.swing.repository.pagination.Pagination;
 import com.swing.repository.pagination.Sort;
 import com.swing.repository.student.StudentQuery;
 import com.swing.repository.student.StudentRepository;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -69,17 +68,35 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public List<Student> findMany(FilterStudentsRequest request) throws SQLException {
+    public StudentListResponse findMany(FilterStudentsRequest request) throws SQLException {
         Sort sort = Sort.builder()
                 .field(request.getSortField())
                 .ascending(Objects.equals(request.getSortOrder(), "ASC"))
                 .build();
+        int page = request.getPage() == null ? 0 : request.getPage();
+        int size = request.getSize() == null ? 10 : request.getSize();
+
         StudentQuery query = StudentQuery.builder()
                 .search(request.getSearch())
-                .pagination(Pagination.builder().page(request.getPage()).size(request.getSize()).sort(sort).build())
+                .pagination(Pagination.builder().page(page).size(size).sort(sort).build())
                 .filter(null)
                 .build();
-        return studentRepository.findMany(query);
+        List<Student> students = studentRepository.findMany(query);
+        List<StudentResponse> studentResponses = new ArrayList<>();
+        students.forEach(student -> {
+            StudentResponse response = StudentResponse.builder()
+                    .id(student.getId())
+                    .name(student.getName())
+                    .score(student.getScore())
+                    .image(student.getImage())
+                    .note(student.getNote())
+                    .address(student.getAddress())
+                    .build();
+            studentResponses.add(response);
+        });
+        return StudentListResponse.builder()
+                .studentResponses(studentResponses)
+                .build();
     }
     @Override
     public Boolean existsById(long id) throws SQLException {

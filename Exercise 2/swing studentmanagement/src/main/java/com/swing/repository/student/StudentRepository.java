@@ -1,7 +1,5 @@
 package com.swing.repository.student;
 
-import com.swing.models.Student;
-
 import java.sql.SQLException;
 import java.util.List;
 

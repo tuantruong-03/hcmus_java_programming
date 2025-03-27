@@ -1,7 +1,6 @@
 package com.swing.context;
 
-import com.mysql.cj.log.Log;
-import com.swing.database.Database;
+import com.swing.config.Database;
 import com.swing.repository.student.StudentRepository;
 import com.swing.repository.student.StudentRepositoryImpl;
 import com.swing.services.student.StudentService;
@@ -21,12 +20,17 @@ public class ApplicationContext {
     private ApplicationContext() {}
 
     public static ApplicationContext init(Database database) throws SQLException {
-        if (context != null) {
-            return context;
-        }
         context = new ApplicationContext();
         context.studentRepository = new StudentRepositoryImpl(database);
         context.studentService = new StudentServiceImpl(context.studentRepository);
         return context;
     }
+
+    public static ApplicationContext getInstance() {
+        if (context == null) {
+            throw new IllegalStateException("ApplicationContext not initialized");
+        }
+        return context;
+    }
+
 }

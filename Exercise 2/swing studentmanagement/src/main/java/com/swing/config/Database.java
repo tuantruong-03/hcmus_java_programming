@@ -1,4 +1,4 @@
-package com.swing.database;
+package com.swing.config;
 
 
 import java.sql.Connection;

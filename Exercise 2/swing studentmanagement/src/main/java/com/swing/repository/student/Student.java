@@ -1,4 +1,4 @@
-package com.swing.models;
+package com.swing.repository.student;
 
 import lombok.Builder;
 import lombok.Getter;

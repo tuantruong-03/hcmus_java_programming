@@ -15,7 +15,11 @@ public class FilterStudentsRequest {
     private String sortField;
     private String sortOrder;
 
-    private static class CustomBuilder extends FilterStudentsRequestBuilder {
+    public static CustomBuilder customBuilder() {
+        return new CustomBuilder();
+    }
+
+    public static class CustomBuilder extends FilterStudentsRequestBuilder {
         @Override
         public FilterStudentsRequest build() {
             // Default values if null
@@ -25,7 +29,7 @@ public class FilterStudentsRequest {
             if (super.size == null || super.size <= 0) {
                 super.size(10);
             }
-            if (!Objects.equals(super.sortOrder, "ASC") || !Objects.equals(super.sortField, "DESC")) {
+            if (!Objects.equals(super.sortOrder, "ASC") && !Objects.equals(super.sortOrder, "DESC")) {
                 super.sortOrder = "ASC";
             }
             return super.build();

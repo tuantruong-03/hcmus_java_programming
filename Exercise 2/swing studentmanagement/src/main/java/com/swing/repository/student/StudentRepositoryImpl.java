@@ -1,8 +1,6 @@
 package com.swing.repository.student;
 
-import com.swing.database.Database;
-import com.swing.dtos.student.UpdateStudentRequest;
-import com.swing.models.Student;
+import com.swing.config.Database;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -109,8 +107,9 @@ public class StudentRepositoryImpl implements StudentRepository {
         }
 
         if (query.getSearch() != null && !query.getSearch().isBlank()) {
-            sql.append(" OR (id LIKE ? AND name LIKE ?");
-            String searchPattern = "%" + Pattern.quote(query.getSearch()) + "%";
+            sql.append(" AND (id LIKE ? OR name LIKE ? OR address LIKE ?)");
+            String searchPattern = "%" + query.getSearch() + "%";
+            params.add(searchPattern);
             params.add(searchPattern);
             params.add(searchPattern);
         }
@@ -130,7 +129,7 @@ public class StudentRepositoryImpl implements StudentRepository {
             }
             sql.append(" ORDER BY ")
                     .append(field)
-                    .append(query.getPagination().getSort().getAscending() ? " ASC" : " DESC");
+                    .append(Boolean.TRUE.equals(query.getPagination().getSort().getAscending()) ? " ASC" : " DESC");
         }
         // Pagination
         if (query.getPagination() != null) {
