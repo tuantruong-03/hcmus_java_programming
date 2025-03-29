@@ -73,7 +73,7 @@ public class StudentListPanel extends JPanel {
         table.getColumn(StudentTable.Column.IMAGE.getName()).setCellRenderer(new TableImageCellRenderer());
 
         table.getColumn(StudentTable.Column.ACTION.getName()).setCellRenderer(new TableActionCellRenderer());
-        table.getColumn(StudentTable.Column.ACTION.getName()).setCellEditor(new TableActionCellEditor(table));
+        table.getColumn(StudentTable.Column.ACTION.getName()).setCellEditor(new TableActionCellEditor());
 
 
         table.getTableHeader().addMouseListener(new MouseAdapter() {
@@ -122,6 +122,9 @@ public class StudentListPanel extends JPanel {
 
     public void loadData() {
         try {
+            if (table != null && table.isEditing()) {
+                table.getCellEditor().cancelCellEditing();
+            }
             FilterStudentsRequest request = FilterStudentsRequest.customBuilder().search(search).sortField(sortField).sortOrder(sortOrder).build();
             StudentListResponse studentListResponse = studentService.findMany(request);
             students = studentListResponse.getStudentResponses();
