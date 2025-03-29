@@ -4,6 +4,8 @@ import com.swing.repository.pagination.Pagination;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Builder
 @Getter
 public class StudentQuery  {
@@ -25,5 +27,6 @@ public class StudentQuery  {
     public static class Filter {
         private Long id;
         private String name;
+        private List<Long> inIds;
     }
 }

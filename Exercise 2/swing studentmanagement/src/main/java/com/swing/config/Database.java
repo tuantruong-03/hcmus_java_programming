@@ -1,29 +1,43 @@
 package com.swing.config;
 
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 public class Database {
-    private final Connection connection;
-    public Database(ConnectionOptions connOpts) throws SQLException  {
+    private Connection connection;
+    private final ConnectionOptions connOpts;
+    private final Logger log = Logger.getLogger(Database.class.getName());
 
-           connection = DriverManager.getConnection(connOpts.url, connOpts.username, connOpts.password);
+    public Database(ConnectionOptions connOpts) throws SQLException {
+        log.info("Initializing connection to the database...");
+        this.connOpts = connOpts;
+        this.connection = createConnection();
     }
-    public Connection getConnection() {
-        if (connection == null) {
-            throw new IllegalStateException("Database not open");
+
+    public synchronized Connection getConnection() throws SQLException {
+        if (connection == null || connection.isClosed()) {
+            log.info("Reconnecting to the database...");
+            connection = createConnection();
         }
         return connection;
     }
 
-    public static class ConnectionOptions {
-        private String url;
-        private String username;
-        private String password;
 
-        public ConnectionOptions(String url, String databaseName,  String username, String password) {
+    private Connection createConnection() throws SQLException {
+        Connection conn = DriverManager.getConnection(connOpts.url, connOpts.username, connOpts.password);
+        log.info("Connected to the database.");
+        return conn;
+    }
+
+
+    public static class ConnectionOptions {
+        private final String url;
+        private final String username;
+        private final String password;
+
+        public ConnectionOptions(String url, String databaseName, String username, String password) {
             this.url = url + "/" + databaseName;
             this.username = username;
             this.password = password;

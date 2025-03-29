@@ -20,18 +20,60 @@ public class StudentRepositoryImpl implements StudentRepository {
 
     @Override
     public void create(Student student) throws SQLException {
-        String sql = "INSERT INTO students (name, score, image, address, note) VALUES (?,?,?,?, ?)";
+        boolean hasId = student.getId() != null;
+        String sql = hasId
+                ? "INSERT INTO students (id, name, score, image, address, note) VALUES (?,?,?,?,?,?)"
+                : "INSERT INTO students (name, score, image, address, note) VALUES (?,?,?,?,?)";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, student.getName());
-            ps.setDouble(2, student.getScore());
-            ps.setString(3, student.getImage());
-            ps.setString(4, student.getAddress());
-            ps.setString(5, student.getNote());
+            int index = 1;
+            if (hasId) {
+                ps.setLong(index++, student.getId());
+            }
+            ps.setString(index++, student.getName());
+            ps.setDouble(index++, student.getScore());
+            ps.setString(index++, student.getImage());
+            ps.setString(index++, student.getAddress());
+            ps.setString(index, student.getNote());
+
             ps.executeUpdate();
             log.info("Student added successfully");
         }
     }
+
+    public void createMany(List<Student> students) throws SQLException {
+        if (students == null || students.isEmpty()) {
+            return;  // Nothing to insert
+        }
+
+        boolean hasId = students.get(0).getId() != null;  // Check if ID is provided
+
+        String sql = hasId
+                ? "INSERT INTO students (id, name, score, image, address, note) VALUES (?,?,?,?,?,?)"
+                : "INSERT INTO students (name, score, image, address, note) VALUES (?,?,?,?,?)";
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (Student student : students) {
+                int index = 1;
+                if (hasId) {
+                    ps.setLong(index++, student.getId());
+                }
+                ps.setString(index++, student.getName());
+                ps.setDouble(index++, student.getScore());
+                ps.setString(index++, student.getImage());
+                ps.setString(index++, student.getAddress());
+                ps.setString(index, student.getNote());
+
+                ps.addBatch();  // Add to batch
+            }
+
+            ps.executeBatch();  // Execute batch insert
+            log.info(students.size() + " students added successfully");
+        }
+    }
+
 
     @Override
     public int update(long id, Student.UpdatePayload payload) throws SQLException {
@@ -91,9 +133,11 @@ public class StudentRepositoryImpl implements StudentRepository {
 
     @Override
     public List<Student> findMany(StudentQuery query) throws SQLException {
-        try (PreparedStatement ps = prepareQueryStatement(query)) {
-            ResultSet rs = ps.executeQuery();
-            List<Student> students = new ArrayList<>();
+        List<Student> students = new ArrayList<>();
+        try (Connection conn = db.getConnection();  // Get connection once
+             PreparedStatement ps = prepareQueryStatement(conn, query);
+             ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 Student student = Student.builder()
                         .id(rs.getLong(Student.ColumnId))
@@ -105,30 +149,33 @@ public class StudentRepositoryImpl implements StudentRepository {
                         .build();
                 students.add(student);
             }
-            return students;
         }
+        return students; // Connection closes automatically after this
     }
+
 
     @Override
     public Student findOne(StudentQuery query) throws SQLException {
-        PreparedStatement ps = prepareQueryStatement(query);
-        ps.setMaxRows(1);  // Limit to 1 row result
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return Student.builder()
-                    .id(rs.getLong(Student.ColumnId))
-                    .name(rs.getString(Student.ColumnName))
-                    .score(rs.getDouble(Student.ColumnScore))
-                    .image(rs.getString(Student.ColumnImage))
-                    .address(rs.getString(Student.ColumnAddress))
-                    .note(rs.getString(Student.ColumnNote))
-                    .build();
+        try (Connection conn = db.getConnection();  // Get connection once
+             PreparedStatement ps = prepareQueryStatement(conn, query)) {
+            ps.setMaxRows(1);  // Limit to 1 row result
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Student.builder()
+                            .id(rs.getLong(Student.ColumnId))
+                            .name(rs.getString(Student.ColumnName))
+                            .score(rs.getDouble(Student.ColumnScore))
+                            .image(rs.getString(Student.ColumnImage))
+                            .address(rs.getString(Student.ColumnAddress))
+                            .note(rs.getString(Student.ColumnNote))
+                            .build();
+                }
+            }
         }
         return null;  // If no student is found, return null
-
     }
 
-    public PreparedStatement prepareQueryStatement(StudentQuery query) throws SQLException {
+    public PreparedStatement prepareQueryStatement(Connection connection, StudentQuery query) throws SQLException {
         if (query == null) {
             query = StudentQuery.defaultInstance();
         }
@@ -144,6 +191,13 @@ public class StudentRepositoryImpl implements StudentRepository {
             if (filter.getName() != null) {
                 sql.append(" AND name = ?");
                 params.add(filter.getName());
+            }
+            if (filter.getInIds() != null && filter.getInIds().isEmpty()) {
+                sql.append(" AND id IN (");
+                sql.append("?, ".repeat(filter.getInIds().size()));
+                sql.setLength(sql.length() - 2);
+                sql.append(")");
+                params.addAll(filter.getInIds());
             }
         }
 
@@ -172,8 +226,8 @@ public class StudentRepositoryImpl implements StudentRepository {
             params.add(query.getPagination().getSize());
             params.add(query.getPagination().getPage() * query.getPagination().getSize());
         }
-        Connection conn = db.getConnection();
-        PreparedStatement ps = conn.prepareStatement(sql.toString());
+
+        PreparedStatement ps = connection.prepareStatement(sql.toString());
         for (int i = 0; i < params.size(); i++) {
             Object param = params.get(i);
             if (param instanceof String str) {
@@ -185,6 +239,7 @@ public class StudentRepositoryImpl implements StudentRepository {
             }
         }
         return ps;
+
     }
 
     private boolean validateSortField(String sortField) {
@@ -198,7 +253,7 @@ public class StudentRepositoryImpl implements StudentRepository {
     }
 
     @Override
-    public Boolean existsById(long id) throws SQLException {
+    public boolean existsById(long id) throws SQLException {
         String sql = "SELECT COUNT(*) FROM students WHERE id=?";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

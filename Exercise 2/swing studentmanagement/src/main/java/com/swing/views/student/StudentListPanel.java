@@ -1,10 +1,13 @@
 package com.swing.views.student;
 
+import com.swing.components.TableActionCellEditor;
+import com.swing.components.TableActionCellRenderer;
 import com.swing.components.TableImageCellRenderer;
 import com.swing.context.ApplicationContext;
 import com.swing.dtos.student.FilterStudentsRequest;
 import com.swing.dtos.student.StudentListResponse;
 import com.swing.dtos.student.StudentResponse;
+import com.swing.repository.student.Student;
 import com.swing.services.student.StudentService;
 import com.swing.views.MainFrame;
 
@@ -20,6 +23,8 @@ import java.util.List;
 
 public class StudentListPanel extends JPanel {
     private transient StudentService studentService;
+    private List<StudentResponse> students;
+    private JTable table; // Stored as an instance variable
     private DefaultTableModel tableModel;
     private String sortField = "id";
     private String sortOrder = "ASC";
@@ -42,6 +47,11 @@ public class StudentListPanel extends JPanel {
         JButton btnExport = new JButton("Export CSV");
 
         btnBack.addActionListener(e -> parent.navigateToDatabaseConnectionPanel());
+        btnExport.addActionListener(e -> {
+            List<Long> studentIds = students.stream().map(StudentResponse::getId).toList();
+            new ExportStudentsToCSVDialog(this, studentIds);
+        });
+        btnImport.addActionListener(e -> new ImportStudentsFromCSVDialog(this));
         buttonPanel.add(btnImport);
         buttonPanel.add(btnExport);
         buttonPanel.add(btnBack);
@@ -51,16 +61,20 @@ public class StudentListPanel extends JPanel {
 
     private JTable createTable() {
         Object[] columns = {StudentTable.Column.ID.getName()
-                ,StudentTable.Column.IMAGE.getName()
-                ,StudentTable.Column.NAME.getName()
-                ,StudentTable.Column.SCORE.getName()
-                ,StudentTable.Column.ADDRESS.getName()
-                ,StudentTable.Column.NOTE.getName()
-        ,StudentTable.Column.ACTION.getName()};
+                , StudentTable.Column.IMAGE.getName()
+                , StudentTable.Column.NAME.getName()
+                , StudentTable.Column.SCORE.getName()
+                , StudentTable.Column.ADDRESS.getName()
+                , StudentTable.Column.NOTE.getName()
+                , StudentTable.Column.ACTION.getName()};
         tableModel = new DefaultTableModel(columns, 0);
-        JTable table = new JTable(tableModel);
+        table = new JTable(tableModel);
         table.setRowHeight(50);
         table.getColumn(StudentTable.Column.IMAGE.getName()).setCellRenderer(new TableImageCellRenderer());
+
+        table.getColumn(StudentTable.Column.ACTION.getName()).setCellRenderer(new TableActionCellRenderer());
+        table.getColumn(StudentTable.Column.ACTION.getName()).setCellEditor(new TableActionCellEditor(table));
+
 
         table.getTableHeader().addMouseListener(new MouseAdapter() {
             @Override
@@ -105,19 +119,24 @@ public class StudentListPanel extends JPanel {
         panel.add(addButton, BorderLayout.EAST);
         return panel;
     }
+
     public void loadData() {
         try {
             FilterStudentsRequest request = FilterStudentsRequest.customBuilder().search(search).sortField(sortField).sortOrder(sortOrder).build();
-            StudentListResponse students = studentService.findMany(request);
-            List<StudentResponse> studentResponses = students.getStudentResponses();
+            StudentListResponse studentListResponse = studentService.findMany(request);
+            students = studentListResponse.getStudentResponses();
             // Clear the current table data before adding new data
             tableModel.setRowCount(0); // Reset the table
 
-            for (StudentResponse response : studentResponses) {
+            for (StudentResponse response : students) {
                 JButton updateButton = new JButton("🖋️");
+                JButton deleteButton = new JButton("🗑️");
                 updateButton.addActionListener(e -> new UpdateStudentDialog(this, response.getId()));
+                deleteButton.addActionListener(e -> new DeleteStudentDialog(this, response.getId()));
                 JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                actionPanel.setBackground(Color.WHITE);
                 actionPanel.add(updateButton);
+                actionPanel.add(deleteButton);
                 Object[] rowData = {
                         response.getId(),
                         response.getImageIcon(), // If you have a URL or image path, it can be handled separately

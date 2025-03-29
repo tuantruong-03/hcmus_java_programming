@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.sql.SQLException;
 
 import com.swing.context.ApplicationContext;
 import com.swing.dtos.student.FilterStudentsRequest;
@@ -95,6 +94,7 @@ public class UpdateStudentDialog extends JDialog {
         add(mainPanel);
         pack();
         setLocationRelativeTo(null);
+        setVisible(true);
     }
 
     private void selectImage() {
@@ -102,7 +102,6 @@ public class UpdateStudentDialog extends JDialog {
         fileChooser.setDialogTitle("Select Student Image");
         fileChooser.setFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "jpeg"));
         fileChooser.setAcceptAllFileFilterUsed(false);
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             selectedFile = fileChooser.getSelectedFile();
@@ -117,29 +116,36 @@ public class UpdateStudentDialog extends JDialog {
             String address = addressField.getText().trim();
             String note = noteField.getText().trim();
 
-            if (name.isEmpty() || scoreText.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Name and Score are required!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
+            UpdateStudentRequest.UpdateStudentRequestBuilder requestBuilder = UpdateStudentRequest.builder();
+            if (!name.isBlank() && !name.equals(student.getName())) {
+                requestBuilder.name(name);
+            }
+            if (!scoreText.isBlank() && !scoreText.equals(student.getScore().toString())) {
+                double score = Double.parseDouble(scoreText);
+                if (score < 0 || score > 10) {
+                    JOptionPane.showMessageDialog(this, "Score must be between 0 and 10!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                requestBuilder.score(score);
+            }
+            if (!address.isBlank() && !address.equals(student.getAddress())) {
+                requestBuilder.address(address);
+            }
+            if (!note.isBlank() && !note.equals(student.getNote())) {
+                requestBuilder.note(note);
             }
 
-            double score = Double.parseDouble(scoreText);
-            if (score < 0 || score > 10) {
-                JOptionPane.showMessageDialog(this, "Score must be between 0 and 10!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+
             String imagePath = selectedFile != null ? saveImage(selectedFile) : null;
-            UpdateStudentRequest request = UpdateStudentRequest.builder()
-                    .name(name)
-                    .score(score)
-                    .address(address)
-                    .note(note)
-                    .image(imagePath)
-                    .build();
+            if (imagePath != null) {
+                requestBuilder.image(imagePath);
+            }
+            UpdateStudentRequest request = requestBuilder.build();
             studentService.updateOne(student.getId(), request);
 
             JOptionPane.showMessageDialog(this, "Student updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            dispose();
             parent.refresh();
+            dispose();
 
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Invalid score format!", "Error", JOptionPane.ERROR_MESSAGE);

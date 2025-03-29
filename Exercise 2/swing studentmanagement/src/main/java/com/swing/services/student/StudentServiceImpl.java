@@ -1,5 +1,7 @@
 package com.swing.services.student;
 
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 import com.swing.dtos.student.*;
 import com.swing.exceptions.DeleteResourceException;
 import com.swing.exceptions.InvalidInputsException;
@@ -9,13 +11,18 @@ import com.swing.repository.pagination.Pagination;
 import com.swing.repository.pagination.Sort;
 import com.swing.repository.student.StudentQuery;
 import com.swing.repository.student.StudentRepository;
+
+
+import java.io.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
+    private final Logger logger = Logger.getLogger(StudentServiceImpl.class.getName());
 
     public StudentServiceImpl(StudentRepository studentRepository) {
         this.studentRepository = studentRepository;
@@ -23,7 +30,7 @@ public class StudentServiceImpl implements StudentService {
 
 
     @Override
-    public void create(CreateStudentRequest request) throws Exception  {
+    public void create(CreateStudentRequest request) throws Exception {
         InvalidInputsException invalidInputsException = request.validate();
         if (invalidInputsException != null) {
             throw invalidInputsException;
@@ -90,6 +97,7 @@ public class StudentServiceImpl implements StudentService {
                 .address(student.getAddress())
                 .build();
     }
+
     @Override
     public void updateOne(long id, UpdateStudentRequest request) throws Exception {
         InvalidInputsException invalidInputsException = request.validate();
@@ -119,6 +127,63 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public Boolean existsById(long id) throws SQLException {
-       return studentRepository.existsById(id);
+        return studentRepository.existsById(id);
+    }
+
+    public boolean exportToCSV(List<Long> studentIds, File csvFile) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(csvFile, false))) {
+            writer.println("ID,Name,Score,Image,Address,Note");
+            StudentQuery query = StudentQuery.builder()
+                    .filter(StudentQuery.Filter.builder().inIds(studentIds).build())
+                    .build();
+            List<Student> students = studentRepository.findMany(query);
+
+            for (Student student : students) {
+                writer.printf("%s,%s,%.2f,%s,\"%s\",%s%n", student.getId(), student.getName(), student.getScore(),
+                        student.getImage(), student.getAddress(), student.getNote());
+            }
+            writer.flush();
+            logger.info("Export successful!");
+            return true;
+        } catch (IOException | SQLException e) {
+            logger.info("Error exporting CSV: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean importFromCSV(File csvFile) throws SQLException {
+        List<Student> students = new ArrayList<>();
+        try (CSVReader reader = new CSVReader(new FileReader(csvFile))) {
+            List<String[]> records = reader.readAll();
+            records.remove(0); // Skip header row
+
+            for (String[] data : records) {
+                if (data.length < 6) {
+                    logger.warning("Skipping invalid row: " + String.join(",", data));
+                    continue;
+                }
+                Long id = Long.parseLong(data[0]);
+                if (Boolean.TRUE.equals(studentRepository.existsById(id))) {
+                    logger.warning("Student with id: " + id + " already exists!");
+                    continue;
+                }
+                Student student = Student.builder()
+                        .id(id)
+                        .name(data[1])
+                        .score(Double.parseDouble(data[2]))
+                        .image(data[3])
+                        .address(data[4]) // Properly handles quoted addresses
+                        .note(data[5])
+                        .build();
+                students.add(student);
+            }
+
+            studentRepository.createMany(students);
+            logger.info("Import successful!");
+            return true;
+        } catch (IOException  | NumberFormatException | CsvException e) {
+            logger.severe("Error importing CSV: " + e.getMessage());
+            return false;
+        }
     }
 }
