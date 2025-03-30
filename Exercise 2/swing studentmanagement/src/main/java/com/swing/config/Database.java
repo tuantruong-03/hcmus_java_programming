@@ -3,6 +3,7 @@ package com.swing.config;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Database {
@@ -24,13 +25,19 @@ public class Database {
         return connection;
     }
 
-
     private Connection createConnection() throws SQLException {
-        Connection conn = DriverManager.getConnection(connOpts.url, connOpts.username, connOpts.password);
-        log.info("Connected to the database.");
-        return conn;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(connOpts.url, connOpts.username, connOpts.password);
+            log.info("Connected to the database.");
+            return conn;
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, "Database connection failed", e);
+            throw e; // Rethrow SQLException
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
-
 
     public static class ConnectionOptions {
         private final String url;

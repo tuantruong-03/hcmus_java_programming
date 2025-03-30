@@ -75,5 +75,6 @@ public class ImportStudentsFromCSVDialog extends JDialog {
 
         setSize(400, 150);
         setLocationRelativeTo(null);
+        setVisible(true);
     }
 }
