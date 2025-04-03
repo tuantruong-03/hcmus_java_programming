@@ -22,19 +22,19 @@ public class DatabaseConnectionPanel extends JPanel {
 
         // TODO: erase default value
         inputPanel.add(new JLabel("DB Server URL:"));
-        urlField = new JTextField("jdbc:mysql://localhost:3306");
+        urlField = new JTextField();
         inputPanel.add(urlField);
 
         inputPanel.add(new JLabel("Database Name:"));
-        dbNameField = new JTextField("student_management");
+        dbNameField = new JTextField();
         inputPanel.add(dbNameField);
 
         inputPanel.add(new JLabel("Username:"));
-        userField = new JTextField("root");
+        userField = new JTextField();
         inputPanel.add(userField);
 
         inputPanel.add(new JLabel("Password:"));
-        passwordField = new JPasswordField("Tuantruong131203");
+        passwordField = new JPasswordField();
         inputPanel.add(passwordField);
 
         // Centered Button Panel

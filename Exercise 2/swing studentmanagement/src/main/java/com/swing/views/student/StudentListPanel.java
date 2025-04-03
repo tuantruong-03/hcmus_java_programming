@@ -7,7 +7,6 @@ import com.swing.context.ApplicationContext;
 import com.swing.dtos.student.FilterStudentsRequest;
 import com.swing.dtos.student.StudentListResponse;
 import com.swing.dtos.student.StudentResponse;
-import com.swing.repository.student.Student;
 import com.swing.services.student.StudentService;
 import com.swing.views.MainFrame;
 
@@ -36,8 +35,7 @@ public class StudentListPanel extends JPanel {
         setLayout(new BorderLayout());
         JPanel headerPanel = createHeaderPanel();
         add(headerPanel, BorderLayout.NORTH);
-        JTable table = createTable();
-        JScrollPane jScrollPane = new JScrollPane(table);
+        JScrollPane jScrollPane = createScrollableTable();
         add(jScrollPane, BorderLayout.CENTER);
         loadData();
         // Add action buttons
@@ -59,7 +57,7 @@ public class StudentListPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    private JTable createTable() {
+    private JScrollPane createScrollableTable() {
         Object[] columns = {StudentTable.Column.ID.getName()
                 , StudentTable.Column.IMAGE.getName()
                 , StudentTable.Column.NAME.getName()
@@ -87,17 +85,19 @@ public class StudentListPanel extends JPanel {
                 }
             }
         });
-        return table;
+        return new JScrollPane(table);
     }
 
     private JPanel createHeaderPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+
+        // Search panel (aligned to the left)
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.add(new JLabel("Search: "));
         JTextField searchField = new JTextField(20);
         searchField.setToolTipText("Search students by name or ID");
 
-        // Add KeyListener to search bar for real-time search
+        // Add KeyListener for real-time search
         searchField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
@@ -108,15 +108,24 @@ public class StudentListPanel extends JPanel {
                     search = searchField.getText();
                     loadData();
                 });
-                searchTimer.setRepeats(false); // Make sure it runs only once after the delay
+                searchTimer.setRepeats(false);
                 searchTimer.start();
             }
         });
+
         searchPanel.add(searchField);
         panel.add(searchPanel, BorderLayout.WEST);
+
+        // Button panel (aligned to the right)
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton addButton = new JButton("+");
-        addButton.addActionListener(e -> new CreateStudentDialog(this).setVisible(true));
-        panel.add(addButton, BorderLayout.EAST);
+
+        // Add padding inside the button
+        addButton.setMargin(new Insets(5, 10, 5, 10));  // Top, Left, Bottom, Right
+        addButton.addActionListener(e -> new CreateStudentDialog(this));
+        buttonPanel.add(addButton);
+
+        panel.add(buttonPanel, BorderLayout.EAST);
         return panel;
     }
 

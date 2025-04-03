@@ -1,0 +1,10 @@
+- Cài đặt JDK 21 (khác JDK chạy sẽ bị lỗi).
+- Đảm bảo file/folder "studentmanagement-1.0-SNAPSHOT-jar-with-dependencies.jar", "images" cùng cấp độ thư mục.
+- Từ đường dẫn thư mục gốc (21120589), chạy "java -jar .\studentmanagement-1.0-SNAPSHOT-jar-with-dependencies.jar".
+- Chương trình sẽ xuất hiện một cửa sổ để kết nối database, người dùng sẽ nhập DB Server Url, Database Name, Username. Password
+-- Nếu nhập sai sẽ nhập lại (chương trình thông báo lỗi).
+- Sau khi nhập thành công, người dùng được chuyển hướng tới danh sách sinh viên (được thể hiện bằng bảng), ở cửa sổ này, người dùng có thể:
+-- Tìm kiếm sinh viên theo ID, Name, Address.
+-- Sắp xếp danh sách sinh viên theo thứ tự ID, Score theo tăng dần/giảm dần.
+-- Sửa/xóa sinh viên bằng cách ấn vào biểu tượng cây bút/thùng rác ở cột "Action".
+-- Nhập/xuất danh sách sinh viên từ/ra file CSV.

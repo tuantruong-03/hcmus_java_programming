@@ -139,11 +139,16 @@ public class StudentServiceImpl implements StudentService {
             List<Student> students = studentRepository.findMany(query);
 
             for (Student student : students) {
-                writer.printf("%s,%s,%.2f,%s,\"%s\",%s%n", student.getId(), student.getName(), student.getScore(),
-                        student.getImage(), student.getAddress(), student.getNote());
+                String name = student.getName() == null ? "" : student.getName();
+                Double score = student.getScore() == null ? 0 : student.getScore();
+                String image = student.getImage() == null ? "" : student.getImage();
+                String address = student.getAddress() == null ? "" : student.getAddress();
+                String note = student.getNote() == null ? "" : student.getNote();
+                writer.printf("%s,%s,%.2f,%s,\"%s\",%s%n", student.getId(), name, score,
+                        image, address  , note);
             }
-            writer.flush();
-            logger.info("Export successful!");
+             writer.flush();
+            logger.info("Export successfully!");
             return true;
         } catch (IOException | SQLException e) {
             logger.info("Error exporting CSV: " + e.getMessage());
@@ -155,31 +160,32 @@ public class StudentServiceImpl implements StudentService {
         List<Student> students = new ArrayList<>();
         try (CSVReader reader = new CSVReader(new FileReader(csvFile))) {
             List<String[]> records = reader.readAll();
-            records.remove(0); // Skip header row
+            records.removeFirst(); // Skip header row
 
             for (String[] data : records) {
-                if (data.length < 6) {
+                if (data.length < 4) {
                     logger.warning("Skipping invalid row: " + String.join(",", data));
                     continue;
                 }
-                Long id = Long.parseLong(data[0]);
-                if (Boolean.TRUE.equals(studentRepository.existsById(id))) {
-                    logger.warning("Student with id: " + id + " already exists!");
-                    continue;
-                }
+                int index = 0;
+//                long id = Long.parseLong(data[0]);
+//                if (Boolean.TRUE.equals(studentRepository.existsById(id))) {
+//                    logger.warning("Student with id: " + id + " already exists!");
+//                    continue;
+//                }
                 Student student = Student.builder()
-                        .id(id)
-                        .name(data[1])
-                        .score(Double.parseDouble(data[2]))
-                        .image(data[3])
-                        .address(data[4]) // Properly handles quoted addresses
-                        .note(data[5])
+//                        .id(id)
+                        .name(data[index++])
+                        .score(Double.parseDouble(data[index++]))
+//                        .image(data[index++])
+                        .address(data[index++])
+                        .note(data[index])
                         .build();
                 students.add(student);
             }
 
             studentRepository.createMany(students);
-            logger.info("Import successful!");
+            logger.info("Import successfully!");
             return true;
         } catch (IOException  | NumberFormatException | CsvException e) {
             logger.severe("Error importing CSV: " + e.getMessage());

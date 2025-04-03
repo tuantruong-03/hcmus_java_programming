@@ -87,6 +87,7 @@ public class CreateStudentDialog extends JDialog {
         add(mainPanel);
         pack();
         setLocationRelativeTo(null);
+        setVisible(true);
     }
 
     private void selectImage() {

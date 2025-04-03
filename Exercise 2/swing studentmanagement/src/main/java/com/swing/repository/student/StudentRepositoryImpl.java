@@ -46,7 +46,7 @@ public class StudentRepositoryImpl implements StudentRepository {
             return;  // Nothing to insert
         }
 
-        boolean hasId = students.get(0).getId() != null;  // Check if ID is provided
+        boolean hasId = students.getFirst().getId() != null;  // Check if ID is provided
 
         String sql = hasId
                 ? "INSERT INTO students (id, name, score, image, address, note) VALUES (?,?,?,?,?,?)"
