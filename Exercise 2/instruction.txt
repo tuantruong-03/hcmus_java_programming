@@ -5,6 +5,6 @@
 -- Nếu nhập sai sẽ nhập lại (chương trình thông báo lỗi).
 - Sau khi nhập thành công, người dùng được chuyển hướng tới danh sách sinh viên (được thể hiện bằng bảng), ở cửa sổ này, người dùng có thể:
 -- Tìm kiếm sinh viên theo ID, Name, Address.
--- Sắp xếp danh sách sinh viên theo thứ tự ID, Score theo tăng dần/giảm dần.
+-- Sắp xếp danh sách sinh viên theo thứ tự ID, Score theo tăng dần/giảm dần bằng nhấp chuột vào cột "ID", "Score".
 -- Sửa/xóa sinh viên bằng cách ấn vào biểu tượng cây bút/thùng rác ở cột "Action".
 -- Nhập/xuất danh sách sinh viên từ/ra file CSV.
