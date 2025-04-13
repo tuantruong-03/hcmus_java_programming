@@ -1,38 +1,22 @@
 package com.swing.models;
 
-
-//public record RecordModel(String word, String meaning) {
-//    public static final String WORD_TAG = "word";
-//    public static final String MEANING_TAG = "meaning";
-//
-//    @Override
-//    public String toString() {
-//        return "Word: " + word + "\nMeaning:\n" + meaning;
-//    }
-//}
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
+import lombok.Setter;
 
 
 @Getter
-@XmlRootElement(name = "record")
-@XmlAccessorType(XmlAccessType.FIELD)
+@Setter
 public class RecordModel {
 
-    @XmlElement(name = "word")
-    private String word;
 
-    @XmlElement(name = "meaning")
+    private String word;
     private String meaning;
 
-    public void setWord(String word) {
-        this.word = word;
-    }
+    public RecordModel() {}
 
-    public void setMeaning(String meaning) {
+    public RecordModel(String word, String meaning) {
+        this.word = word;
         this.meaning = meaning;
+
     }
 }

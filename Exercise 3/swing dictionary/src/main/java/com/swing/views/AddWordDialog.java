@@ -1,15 +1,19 @@
 package com.swing.views;
 
+import com.swing.context.ApplicationContext;
+import com.swing.dtos.dictionary.CreateRecordRequest;
+import com.swing.services.record.RecordService;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class AddWordDialog extends JDialog {
-
     private JTextField wordField;
     private JTextArea meaningsField;
     private JButton addButton;
     private JButton cancelButton;
-    private boolean isAdded = false;
+
+    private final RecordService recordService;
 
     public AddWordDialog(Frame parent) {
         super(parent, "Thêm từ mới", true);
@@ -41,12 +45,26 @@ public class AddWordDialog extends JDialog {
         buttonPanel.add(addButton);
         buttonPanel.add(cancelButton);
         add(buttonPanel, BorderLayout.SOUTH);
+        recordService = ApplicationContext.getInstance().getRecordService();
     }
 
     private void addWord() {
         String word = wordField.getText().trim().toLowerCase();
-        String[] meaningsArray = meaningsField.getText().split("\\n");
-        isAdded = true;
+        String meaning = meaningsField.getText().trim();
+        if (word.trim().isEmpty() || meaning.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Từ mới và nghĩa không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        CreateRecordRequest request = CreateRecordRequest.builder()
+                .word(word)
+                .meaning(meaning)
+                .build();
+        boolean isOk = recordService.createOne(request);
+        if (!isOk) {
+            JOptionPane.showMessageDialog(this, "Đã có lỗi xảy ra, xin vui lòng thử lại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JOptionPane.showMessageDialog(this, "Thêm từ mới thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         dispose();
     }
 
@@ -54,7 +72,4 @@ public class AddWordDialog extends JDialog {
         dispose();
     }
 
-    public boolean isAdded() {
-        return isAdded;
-    }
 }

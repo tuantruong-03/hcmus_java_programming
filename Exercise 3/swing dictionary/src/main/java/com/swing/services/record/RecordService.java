@@ -1,8 +1,12 @@
 package com.swing.services.record;
 
+import com.swing.dtos.dictionary.CreateRecordRequest;
+import com.swing.dtos.dictionary.DeleteRecordRequest;
 import com.swing.dtos.dictionary.RecordRequest;
 import com.swing.models.RecordModel;
 
 public interface RecordService {
-    public RecordModel findOne(RecordRequest request);
+    RecordModel findOne(RecordRequest request);
+    boolean createOne(CreateRecordRequest request);
+    boolean deleteOne(DeleteRecordRequest request);
 }

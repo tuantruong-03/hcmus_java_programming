@@ -1,5 +1,10 @@
 package com.swing.views;
 
+import com.swing.context.ApplicationContext;
+import com.swing.dtos.dictionary.CreateRecordRequest;
+import com.swing.dtos.dictionary.DeleteRecordRequest;
+import com.swing.services.record.RecordService;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -9,6 +14,8 @@ public class DeleteWordDialog extends JDialog {
     private JButton deleteButton;
     private JButton cancelButton;
     private boolean isDeleted = false;
+
+    private final RecordService recordService;
 
     public DeleteWordDialog(Frame parent) {
         super(parent, "Xóa từ", true);
@@ -33,18 +40,25 @@ public class DeleteWordDialog extends JDialog {
 
         add(panel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
+
+        recordService = ApplicationContext.getInstance().getRecordService();
     }
 
     private void deleteWord() {
         String word = wordField.getText().trim().toLowerCase();
-
-//        DictionaryApp dictApp = (DictionaryApp) getOwner();
-//        if (dictApp.deleteWordFromDict(word)) {
-//            isDeleted = true;
-//            JOptionPane.showMessageDialog(this, "Xóa thành công.");
-//        } else {
-//            JOptionPane.showMessageDialog(this, "Không tìm thấy từ để xóa.");
-//        }
+        if (word.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Từ không được để trống!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        DeleteRecordRequest request = DeleteRecordRequest.builder()
+                .word(word)
+                .build();
+        boolean isOk = recordService.deleteOne(request);
+        if (!isOk) {
+            JOptionPane.showMessageDialog(this, "Đã có lỗi xảy ra, xin vui lòng thử lại!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JOptionPane.showMessageDialog(this, "Xóa thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         dispose();
     }
 
