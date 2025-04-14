@@ -1,8 +1,8 @@
 package com.swing.services.record;
 
-import com.swing.dtos.dictionary.CreateRecordRequest;
-import com.swing.dtos.dictionary.DeleteRecordRequest;
-import com.swing.dtos.dictionary.RecordRequest;
+import com.swing.dtos.record.CreateRecordRequest;
+import com.swing.dtos.record.DeleteRecordRequest;
+import com.swing.dtos.record.RecordRequest;
 import com.swing.models.RecordModel;
 
 public interface RecordService {

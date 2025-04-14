@@ -1,7 +1,7 @@
 package com.swing.views;
 
 import com.swing.context.ApplicationContext;
-import com.swing.dtos.dictionary.CreateRecordRequest;
+import com.swing.dtos.record.CreateRecordRequest;
 import com.swing.services.record.RecordService;
 
 import javax.swing.*;
@@ -13,7 +13,7 @@ public class AddWordDialog extends JDialog {
     private JButton addButton;
     private JButton cancelButton;
 
-    private final RecordService recordService;
+    private final transient RecordService recordService;
 
     public AddWordDialog(Frame parent) {
         super(parent, "Thêm từ mới", true);

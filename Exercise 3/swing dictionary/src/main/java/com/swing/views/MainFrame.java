@@ -2,22 +2,23 @@ package com.swing.views;
 
 import com.swing.context.ApplicationContext;
 import com.swing.context.DictionaryType;
-import com.swing.dtos.dictionary.RecordRequest;
+import com.swing.dtos.favorite.CreateFavoriteRequest;
+import com.swing.dtos.record.RecordRequest;
+import com.swing.models.Favorite;
 import com.swing.models.RecordModel;
 import com.swing.services.record.RecordService;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
-import java.util.List;
 
 public class MainFrame extends JFrame {
     private JComboBox<String> languageSelector;
     private JTextField searchField;
     private JTextArea resultArea;
-    private JButton searchButton, addButton, deleteButton, favoritesButton, statsButton;
+    private JButton searchButton, addButton, deleteButton, addToFavoriteButton, favoritesButton, statsButton;
 
     private RecordService recordService;
+    private RecordModel foundRecord;
 
     public MainFrame(String title) {
         super(title);
@@ -64,7 +65,11 @@ public class MainFrame extends JFrame {
         JScrollPane scrollPane = new JScrollPane(resultArea);
         centerPanel.add(searchPanel, BorderLayout.NORTH);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
-
+        addToFavoriteButton = new JButton("Thêm vào yêu thích");
+        addToFavoriteButton.addActionListener(e -> addToFavorites());
+        JPanel favoritePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        favoritePanel.add(addToFavoriteButton);
+        centerPanel.add(favoritePanel, BorderLayout.SOUTH);
         // Bottom panel - Add/Delete
         JPanel bottomPanel = new JPanel(new FlowLayout());
         addButton = new JButton("Thêm từ mới");
@@ -89,6 +94,30 @@ public class MainFrame extends JFrame {
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
+    private void addToFavorites() {
+        if (foundRecord == null) {
+            JOptionPane.showMessageDialog(this, "Không thể thêm từ không hợp lệ vào yêu thích.");
+            return;
+        }
+
+        String language = ApplicationContext.getDictionaryType() == DictionaryType.VI_EN
+                ? "Vietnamese" : "English";
+        CreateFavoriteRequest request = CreateFavoriteRequest.builder()
+                .word(foundRecord.getWord())
+                .language(language)
+                .meaning(foundRecord.getMeaning())
+                .build();
+
+        boolean success = ApplicationContext.getInstance().getFavoriteService().createOne(request);
+
+        if (success) {
+            JOptionPane.showMessageDialog(this, "Đã thêm vào yêu thích!");
+        } else {
+            JOptionPane.showMessageDialog(this, "Không thể thêm vào yêu thích.");
+        }
+    }
+
+
     private void showFavoritesPanel() {
         JFrame favFrame = new JFrame("Từ Yêu Thích");
         favFrame.setSize(400, 300);
@@ -104,12 +133,12 @@ public class MainFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập từ cần tra.");
             return;
         }
-        RecordModel record = recordService.findOne(RecordRequest.builder().word(word).build());
+        foundRecord = recordService.findOne(RecordRequest.builder().word(word).build());
 
-        if (record == null) {
+        if (foundRecord == null) {
             resultArea.setText("Không tìm thấy từ: " + word);
         } else {
-            resultArea.setText(record.getMeaning());
+            resultArea.setText(foundRecord.getMeaning());
         }
     }
 }

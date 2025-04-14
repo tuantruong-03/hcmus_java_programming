@@ -1,8 +1,7 @@
 package com.swing.views;
 
 import com.swing.context.ApplicationContext;
-import com.swing.dtos.dictionary.CreateRecordRequest;
-import com.swing.dtos.dictionary.DeleteRecordRequest;
+import com.swing.dtos.record.DeleteRecordRequest;
 import com.swing.services.record.RecordService;
 
 import javax.swing.*;
@@ -15,7 +14,7 @@ public class DeleteWordDialog extends JDialog {
     private JButton cancelButton;
     private boolean isDeleted = false;
 
-    private final RecordService recordService;
+    private final transient RecordService recordService;
 
     public DeleteWordDialog(Frame parent) {
         super(parent, "Xóa từ", true);
