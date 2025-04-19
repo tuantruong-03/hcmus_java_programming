@@ -8,4 +8,5 @@ import lombok.Getter;
 public class WordLookupQuery {
     private Long fromTimeInMilSec;
     private Long toTimeInMilSec;
+    private String language;
 }

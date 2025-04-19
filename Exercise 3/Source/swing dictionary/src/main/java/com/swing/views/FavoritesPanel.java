@@ -1,6 +1,5 @@
 package com.swing.views;
 
-import com.swing.components.WordWrapCellRenderer;
 import com.swing.context.ApplicationContext;
 import com.swing.context.DictionaryType;
 import com.swing.dtos.favorite.FavoritesRequest;
@@ -25,7 +24,7 @@ enum Column {
     private final int index;
     private final String name;
 
-    private Column(int index, String name) {
+    Column(int index, String name) {
         this.index = index;
         this.name = name;
     }
@@ -35,11 +34,11 @@ enum Column {
 
 public class FavoritesPanel extends JPanel {
 
-    private JTable table;
-    private DefaultTableModel tableModel;
+    private final JTable table;
+    private final DefaultTableModel tableModel;
     private String sortField = "word";
     private String sortOrder = "ASC";
-    private final FavoriteService favoriteService;
+    private final transient FavoriteService favoriteService;
     public FavoritesPanel() {
         favoriteService = ApplicationContext.getInstance().getFavoriteService();
         setLayout(new BorderLayout());
@@ -57,7 +56,6 @@ public class FavoritesPanel extends JPanel {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);  // Turn
         table.getColumnModel().getColumn(Column.WORD.getIndex()).setPreferredWidth(150);  // Word column is narrow
         table.getColumnModel().getColumn(Column.MEANING.getIndex()).setPreferredWidth(400); // Meaning column is wider
-//        table.getColumnModel().getColumn(Column.MEANING.getIndex()).setCellRenderer(new WordWrapCellRenderer());
 
         table.getTableHeader().addMouseListener(new MouseAdapter() {
             @Override

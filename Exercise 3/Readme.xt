@@ -1,0 +1,14 @@
++ Thông tin liên hệ của sinh viên
+- Outlook: 21120589@student.hcmus.edu.vn
+- Gmail: truonganhtuan3092@gmail.com
++ Các hướng dẫn để biên dịch và chạy mã nguồn
+- Cài đặt JDK 21 (các version khác sẽ không chạy được, do project được biên dịch bằng JDK 21)
+- Cách 1 (khuyến khích):
+Bật Command Prompt/Terminal và chạy các dòng lệnh sau:
+> cd Release
+> java -jar .\dictionary-1.0-SNAPSHOT-jar-with-dependencies.jar
+- Cách 2:
+Import project vào IDE của bạn (IntelliJ, Eclipse,...).
+Mở project bằng thư mục Source và chạy bằng IDE
+Lưu ý: nếu không mở project bằng thư mục Source thì sẽ không chạy được, do các file được đọc bằng đường dẫn tương đối.
+++ Link video demo:

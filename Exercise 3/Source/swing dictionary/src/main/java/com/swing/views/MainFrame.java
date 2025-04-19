@@ -4,12 +4,14 @@ import com.swing.context.ApplicationContext;
 import com.swing.context.DictionaryType;
 import com.swing.dtos.favorite.CreateFavoriteRequest;
 import com.swing.dtos.record.RecordRequest;
-import com.swing.models.Favorite;
+import com.swing.dtos.wordlookup.CreateWordLookupRequest;
 import com.swing.models.RecordModel;
 import com.swing.services.record.RecordService;
+import com.swing.services.wordlookup.WordLookupService;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Date;
 
 public class MainFrame extends JFrame {
     private JComboBox<String> languageSelector;
@@ -17,8 +19,10 @@ public class MainFrame extends JFrame {
     private JTextArea resultArea;
     private JButton searchButton, addButton, deleteButton, addToFavoriteButton, favoritesButton, statsButton;
 
-    private RecordService recordService;
-    private RecordModel foundRecord;
+    private transient RecordModel foundRecord;
+
+    private transient RecordService recordService;
+    private transient WordLookupService wordLookupService;
 
     public MainFrame(String title) {
         super(title);
@@ -27,6 +31,7 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         recordService = ApplicationContext.getInstance().getRecordService();
+        wordLookupService = ApplicationContext.getInstance().getWordLookupService();
         initUI();
         setVisible(true);
     }
@@ -80,7 +85,7 @@ public class MainFrame extends JFrame {
         addButton.addActionListener(e -> new AddWordDialog(this).setVisible(true));
         deleteButton.addActionListener(e -> new DeleteWordDialog(this).setVisible(true));
         favoritesButton.addActionListener(e -> showFavoritesPanel());
-//        statsButton.addActionListener(e -> showStatsPanel());
+        statsButton.addActionListener(e -> showWordLookupFrequencyPanel());
 
         bottomPanel.add(addButton);
         bottomPanel.add(deleteButton);
@@ -96,10 +101,9 @@ public class MainFrame extends JFrame {
 
     private void addToFavorites() {
         if (foundRecord == null) {
-            JOptionPane.showMessageDialog(this, "Không thể thêm từ không hợp lệ vào yêu thích.");
+            JOptionPane.showMessageDialog(this, "Vui lòng tra từ hợp lệ để thêm vào yêu thích");
             return;
         }
-
         String language = ApplicationContext.getDictionaryType() == DictionaryType.VI_EN
                 ? "Vietnamese" : "English";
         CreateFavoriteRequest request = CreateFavoriteRequest.builder()
@@ -119,14 +123,23 @@ public class MainFrame extends JFrame {
 
 
     private void showFavoritesPanel() {
-        JFrame favFrame = new JFrame("Từ Yêu Thích");
-        favFrame.setSize(400, 300);
-        favFrame.setLocationRelativeTo(this);
-
-        FavoritesPanel favPanel = new FavoritesPanel();
-        favFrame.add(favPanel);
-        favFrame.setVisible(true);
+        JFrame frame = new JFrame("Từ Yêu Thích");
+        frame.setSize(400, 300);
+        frame.setLocationRelativeTo(this);
+        FavoritesPanel panel = new FavoritesPanel();
+        frame.add(panel);
+        frame.setVisible(true);
     }
+
+    private void showWordLookupFrequencyPanel() {
+        JFrame frame = new JFrame("Từ Đã Tra Cứu");
+        frame.setSize(400, 300);
+        frame.setLocationRelativeTo(this);
+        WordLookupFrequencyPanel panel = new WordLookupFrequencyPanel();
+        frame.add(panel);
+        frame.setVisible(true);
+    }
+
     private void searchWord() {
         String word = searchField.getText().trim().toLowerCase();
         if (word.isEmpty()) {
@@ -137,8 +150,18 @@ public class MainFrame extends JFrame {
 
         if (foundRecord == null) {
             resultArea.setText("Không tìm thấy từ: " + word);
-        } else {
-            resultArea.setText(foundRecord.getMeaning());
+            return;
+        }
+        resultArea.setText(foundRecord.getMeaning());
+        String language = ApplicationContext.getDictionaryType() == DictionaryType.VI_EN
+                ? "Vietnamese" : "English";
+        CreateWordLookupRequest request = CreateWordLookupRequest.builder()
+                .word(foundRecord.getWord())
+                .language(language)
+                .timestamp(new Date().getTime())
+                .build();
+        if (!wordLookupService.createOne(request)) {
+            JOptionPane.showMessageDialog(this, "Đã có lỗi xảy ra khi thêm từ vào lịch sử tra cứu", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

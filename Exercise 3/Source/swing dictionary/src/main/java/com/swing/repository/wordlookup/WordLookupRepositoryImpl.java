@@ -39,7 +39,9 @@ public class WordLookupRepositoryImpl implements WordLookupRepository {
         }
         List<WordLookup> wordLookups = readAll();
         return wordLookups.stream()
-                .filter(lookup -> lookup.getTimestamp() >= query.getFromTimeInMilSec() && lookup.getTimestamp() <= query.getToTimeInMilSec())
+                .filter(lookup -> lookup.getTimestamp() >= query.getFromTimeInMilSec()
+                        && lookup.getTimestamp() <= query.getToTimeInMilSec()
+                        && lookup.getLanguage().equals(query.getLanguage()))
                 .toList();
     }
 
@@ -117,7 +119,7 @@ public class WordLookupRepositoryImpl implements WordLookupRepository {
 
             writer.writeCharacters("\n  ");
             writer.writeStartElement(LANGUAGE_TAG);
-            writer.writeCharacters(f.getWord());
+            writer.writeCharacters(f.getLanguage());
             writer.writeEndElement();
 
             writer.writeCharacters("\n  ");

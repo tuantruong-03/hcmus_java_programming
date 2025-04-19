@@ -21,7 +21,7 @@ public class WordLookupsRequest {
             errors.put("language", "Language is required.");
         }
         if (fromTime > toTime || fromTime < 0) {
-            errors.put("time", "To time must be greater than or equal to from time and can't be negative");
+            errors.put("time", "Start date must be greater than or equal to end date and can't be negative");
 
         }
         if (!errors.isEmpty()) {
