@@ -1,19 +1,18 @@
 package com.swingchat.repository.query;
 
-import lombok.Builder;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Query {
+public class Statement {
     private final String table;
     private final List<Operator> operators;
     private int page;
     private int limit;
     private final List<Sort> sorts;
 
-    public Query(String table) {
+    public Statement(String table) {
         this.page = 1;
         this.limit = 100;
         this.operators = new ArrayList<>();
@@ -21,27 +20,28 @@ public class Query {
         this.table = table;
     }
 
-    public Query addOperator(Operator operator) {
+    public Statement addOperator(Operator operator) {
         this.operators.add(operator);
         return this;
     }
 
-    public Query addSort(Sort sort) {
+    public Statement addSort(Sort sort) {
         this.sorts.add(sort);
         return this;
     }
 
-    public Query page(int page) {
+    public Statement page(int page) {
         this.page = page;
         return this;
     }
 
-    public Query limit(int limit) {
+    public Statement limit(int limit) {
         this.limit = limit;
         return this;
     }
 
-    public String toStatement() {
+
+    public String build() {
         StringBuilder statement = new StringBuilder("SELECT * FROM " + table);
 
         // Add WHERE clause if there are any operators
@@ -66,17 +66,5 @@ public class Query {
 
         return statement.toString();
     }
-
-    @Builder
-    public static class Sort {
-        private String field;
-        private boolean  isAscending;
-
-        public String toStatement() {
-            return field + (isAscending ? " ASC" : " DESC");
-        }
-    }
-
-
 
 }

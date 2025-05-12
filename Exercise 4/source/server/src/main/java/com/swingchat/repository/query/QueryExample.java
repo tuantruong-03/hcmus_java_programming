@@ -1,12 +1,15 @@
 package com.swingchat.repository.query;
 
+import lombok.extern.java.Log;
+
 import java.util.List;
 
-public class QueryTest {
+@Log
+public class QueryExample {
 
     public static void main(String[] args) {
         // Create a query for the "users" table
-        Query query = new Query("users")
+        Statement statement = new Statement("users")
                 .addOperator(new Operator.Eq("username", "john"))
                 .addOperator(new Operator.Gt("age", 18))
                 .addOperator(new Operator.Lt("age", 60))
@@ -20,11 +23,11 @@ public class QueryTest {
                         new Operator.Eq("country", "USA"),
                         new Operator.Eq("country", "Canada")
                 )))
-                .addSort(Query.Sort.builder().field("created_at").isAscending(false).build())
+                .addSort(Sort.builder().field("created_at").isAscending(false).build())
                 .page(3)
                 .limit(20);
 
         // Print the generated SQL-like statement
-        System.out.println(query.toStatement());
+       log.info(statement.build());
     }
 }
