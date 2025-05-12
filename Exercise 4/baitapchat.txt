@@ -1,0 +1,16 @@
+Bài tập ứng dụng chat: 
+- Sinh viên viết một chương trình chat (giao diện đồ họa) có các chức năng sau:
+   - Đăng ký chat user (đăng ký từ ứng dụng client), đăng nhập sau đăng ký.
+   - Chương trình cho phép một user có thể chat với nhiều user khác (đang online) cùng lúc.
+   - Chương trình cho phép user tạo các group chat và chat trong các group này.
+   - Cho phép gởi file trong khi chat.
+   - Cho người dùng xem lịch sử chat của mình, xoá các dòng lịch sử chat.
+
+(các chức năng không bắt buộc: chat group, voice chat, webcam)
+
+Thời hạn nộp bài
+ - Ngày 01/06/2025
+ - Nội dung nộp: MSSV.zip 
+	+ Hướng dẫn sử dụng (doc, clip)
+	+ File jar thực thi
+	+ Source code

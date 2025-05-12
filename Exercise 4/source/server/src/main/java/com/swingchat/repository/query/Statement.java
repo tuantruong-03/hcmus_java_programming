@@ -1,7 +1,11 @@
 package com.swingchat.repository.query;
 
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,31 +44,43 @@ public class Statement {
         return this;
     }
 
+    public PreparedStatement prepare(Connection connection) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT * FROM ").append(table);
 
-    public String build() {
-        StringBuilder statement = new StringBuilder("SELECT * FROM " + table);
-
-        // Add WHERE clause if there are any operators
         if (!operators.isEmpty()) {
+            sql.append(" WHERE ");
             String whereClause = operators.stream()
-                    .map(Operator::toStatement)
+                    .map(Operator::prepareStatement)
                     .collect(Collectors.joining(" AND "));
-            statement.append(" WHERE ").append(whereClause);
+            sql.append(whereClause);
         }
 
-        // Add ORDER BY clause if there are any sorts
         if (!sorts.isEmpty()) {
-            String orderClause = sorts.stream()
-                    .map(Sort::toStatement)
+            sql.append(" ORDER BY ");
+            String orderByClause = sorts.stream()
+                    .map(Sort::prepareStatement)
                     .collect(Collectors.joining(", "));
-            statement.append(" ORDER BY ").append(orderClause);
+            sql.append(orderByClause);
         }
 
-        // Add LIMIT and OFFSET for pagination
         int offset = (page - 1) * limit;
-        statement.append(" LIMIT ").append(limit).append(" OFFSET ").append(offset);
+        sql.append(" LIMIT ").append(limit).append(" OFFSET ").append(offset);
 
-        return statement.toString();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
+            int parameterIndex = 1;
+            for (Operator operator : operators) {
+                Object value = operator.getValue();
+                if (value instanceof Iterable) {
+                    for (Object val : (Collection<?>) value) {
+                        preparedStatement.setObject(parameterIndex++, val);
+                    }
+                } else {
+                    preparedStatement.setObject(parameterIndex++, value);
+                }
+            }
+
+            return preparedStatement;
+        }
     }
 
 }

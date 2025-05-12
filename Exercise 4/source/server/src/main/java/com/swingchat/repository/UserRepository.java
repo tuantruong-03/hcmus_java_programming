@@ -60,10 +60,9 @@ public class UserRepository {
         if (query.limit < 0) {
             statement.limit(10);
         }
-        String sql = statement.build();
         List<User> users = new ArrayList<>();
         try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
+             PreparedStatement stmt = statement.prepare(conn);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {

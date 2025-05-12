@@ -7,7 +7,7 @@ public class Sort {
     private String field;
     private boolean  isAscending;
 
-    public String toStatement() {
+    public String prepareStatement() {
         return field + (isAscending ? " ASC" : " DESC");
     }
 }

@@ -1,130 +1,125 @@
 package com.swingchat.repository.query;
 
-import lombok.AllArgsConstructor;
-
-import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.stream.Collectors;
+import lombok.Getter;
 
+@Getter
 public abstract class Operator {
+    protected String column;
+    protected Object value;
 
-    protected abstract String toStatement();
+    protected Operator(String column, Object value) {
+        this.column = column;
+        this.value = value;
+    }
 
-    @AllArgsConstructor
+    protected abstract String prepareStatement();
+
+    // Equals ( = )
     public static class Eq extends Operator {
-        private String field;
-        private Object value;
-
+        public Eq(String column, Object value) {
+            super(column, value);
+        }
         @Override
-        protected String toStatement() {
-            return field + " = " + value.toString();
+        protected String prepareStatement() {
+            return column + " = ?";
         }
     }
 
-    @AllArgsConstructor
-    public static class Like extends Operator {
-        private String field;
-        private String regex;
-
+    // Not Equals ( != )
+    public static class Neq extends Operator {
+        public Neq(String column, Object value) {
+            super(column, value);
+        }
         @Override
-        protected String toStatement() {
-            return field + " LIKE " + Pattern.quote(regex);
+        protected String prepareStatement() {
+            return column + " != ?";
         }
     }
 
-    @AllArgsConstructor
-    public static class Ne extends Operator {
-        private String field;
-        private Object value;
-
-        @Override
-        protected String toStatement() {
-            return field + " != " + value.toString();
-        }
-    }
-
-    @AllArgsConstructor
+    // Greater Than ( > )
     public static class Gt extends Operator {
-        private String field;
-        private Object value;
-
+        public Gt(String column, Object value) {
+            super(column, value);
+        }
         @Override
-        protected String toStatement() {
-            return field + " > " + value.toString();
+        protected String prepareStatement() {
+            return column + " > ?";
         }
     }
 
-    @AllArgsConstructor
-    public static class Lt extends Operator {
-        private String field;
-        private Object value;
-
-        @Override
-        protected String toStatement() {
-            return field + " < " + value.toString();
-        }
-    }
-
-    @AllArgsConstructor
+    // Greater Than or Equal ( >= )
     public static class Gte extends Operator {
-        private String field;
-        private Object value;
-
+        public Gte(String column, Object value) {
+            super(column, value);
+        }
         @Override
-        protected String toStatement() {
-            return field + " >= " + value.toString();
+        protected String prepareStatement() {
+            return column + " >= ?";
         }
     }
 
-    @AllArgsConstructor
+    // Less Than ( < )
+    public static class Lt extends Operator {
+        public Lt(String column, Object value) {
+            super(column, value);
+        }
+        @Override
+        protected String prepareStatement() {
+            return column + " < ?";
+        }
+    }
+
+    // Less Than or Equal ( <= )
     public static class Lte extends Operator {
-        private String field;
-        private Object value;
-
+        public Lte(String column, Object value) {
+            super(column, value);
+        }
         @Override
-        protected String toStatement() {
-            return field + " <= " + value.toString();
+        protected String prepareStatement() {
+            return column + " <= ?";
         }
     }
 
-    @AllArgsConstructor
+    // LIKE ( pattern matching )
+    public static class Like extends Operator {
+        public Like(String column, Object value) {
+            super(column, value);
+        }
+        @Override
+        protected String prepareStatement() {
+            return column + " LIKE ?";
+        }
+    }
+
+    // IN (collection of values)
     public static class In extends Operator {
-        private String field;
-        private List<Object> values;
-
+        public In(String column, Collection<?> value) {
+            super(column, value);
+        }
         @Override
-        protected String toStatement() {
-            String valueString = values.stream()
-                    .map(Object::toString)
-                    .collect(Collectors.joining(", ", "(", ")"));
-            return field + " IN " + valueString;
+        protected String prepareStatement() {
+            int size = ((Collection<?>) value).size();
+            String placeholders = String.join(", ",
+                    Collections.nCopies(size, "?"));
+            return column + " IN (" + placeholders + ")";
         }
     }
 
-    @AllArgsConstructor
-    public static class Nin extends Operator {
-        private String field;
-        private List<Object> values;
-
-        @Override
-        protected String toStatement() {
-            String valueString = values.stream()
-                    .map(Object::toString)
-                    .collect(Collectors.joining(", ", "(", ")"));
-            return field + " NOT IN " + valueString;
+    // NOT IN (collection of values)
+    public static class NotIn extends Operator {
+        public NotIn(String column, Collection<?> value) {
+            super(column, value);
         }
-    }
-
-    @AllArgsConstructor
-    public static class Or extends Operator {
-        private List<Operator> operators;
-
         @Override
-        protected String toStatement() {
-            String orStatement = operators.stream()
-                    .map(Operator::toStatement)
-                    .collect(Collectors.joining(" OR "));
-            return "(" + orStatement + ")";
+        protected String prepareStatement() {
+            int size = ((Collection<?>) value).size();
+            String placeholders = String.join(", ",
+                    Collections.nCopies(size, "?"));
+            return column + " NOT IN (" + placeholders + ")";
         }
     }
 }
+
