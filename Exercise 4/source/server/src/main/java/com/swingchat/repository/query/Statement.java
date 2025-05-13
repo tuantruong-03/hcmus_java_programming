@@ -44,29 +44,18 @@ public class Statement {
         return this;
     }
 
-    public PreparedStatement prepare(Connection connection) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT * FROM ").append(table);
+    public PreparedStatement prepareGetQuery(Connection connection) throws SQLException {
+        String sql = "SELECT * FROM " + table + prepareConditions();
+        return prepare(connection, sql);
+    }
 
-        if (!operators.isEmpty()) {
-            sql.append(" WHERE ");
-            String whereClause = operators.stream()
-                    .map(Operator::prepareStatement)
-                    .collect(Collectors.joining(" AND "));
-            sql.append(whereClause);
-        }
+    public PreparedStatement prepareCountQuery(Connection connection) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM " + table + prepareConditions();
+        return prepare(connection, sql);
+    }
 
-        if (!sorts.isEmpty()) {
-            sql.append(" ORDER BY ");
-            String orderByClause = sorts.stream()
-                    .map(Sort::prepareStatement)
-                    .collect(Collectors.joining(", "));
-            sql.append(orderByClause);
-        }
-
-        int offset = (page - 1) * limit;
-        sql.append(" LIMIT ").append(limit).append(" OFFSET ").append(offset);
-
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
+    private PreparedStatement prepare(Connection connection, String sql) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             int parameterIndex = 1;
             for (Operator operator : operators) {
                 Object value = operator.getValue();
@@ -78,9 +67,30 @@ public class Statement {
                     preparedStatement.setObject(parameterIndex++, value);
                 }
             }
-
             return preparedStatement;
         }
     }
 
+    public StringBuilder prepareConditions() {
+        StringBuilder conditions = new StringBuilder();
+        if (!operators.isEmpty()) {
+            conditions.append(" WHERE ");
+            String whereClause = operators.stream()
+                    .map(Operator::prepareStatement)
+                    .collect(Collectors.joining(" AND "));
+            conditions.append(whereClause);
+        }
+
+        if (!sorts.isEmpty()) {
+            conditions.append(" ORDER BY ");
+            String orderByClause = sorts.stream()
+                    .map(Sort::prepareStatement)
+                    .collect(Collectors.joining(", "));
+            conditions.append(orderByClause);
+        }
+
+        int offset = (page - 1) * limit;
+        conditions.append(" LIMIT ").append(limit).append(" OFFSET ").append(offset);
+        return conditions;
+    }
 }

@@ -2,7 +2,6 @@ package com.swingchat.repository.query;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.stream.Collectors;
 import lombok.Getter;
 
 @Getter
@@ -72,7 +71,6 @@ public abstract class Operator {
         }
     }
 
-    // Less Than or Equal ( <= )
     public static class Lte extends Operator {
         public Lte(String column, Object value) {
             super(column, value);
@@ -83,9 +81,8 @@ public abstract class Operator {
         }
     }
 
-    // LIKE ( pattern matching )
     public static class Like extends Operator {
-        public Like(String column, Object value) {
+        public Like(String column, String value) {
             super(column, value);
         }
         @Override
@@ -94,7 +91,6 @@ public abstract class Operator {
         }
     }
 
-    // IN (collection of values)
     public static class In extends Operator {
         public In(String column, Collection<?> value) {
             super(column, value);
