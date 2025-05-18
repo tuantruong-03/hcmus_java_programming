@@ -55,20 +55,19 @@ public class Statement {
     }
 
     private PreparedStatement prepare(Connection connection, String sql) throws SQLException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            int parameterIndex = 1;
-            for (Operator operator : operators) {
-                Object value = operator.getValue();
-                if (value instanceof Iterable) {
-                    for (Object val : (Collection<?>) value) {
-                        preparedStatement.setObject(parameterIndex++, val);
-                    }
-                } else {
-                    preparedStatement.setObject(parameterIndex++, value);
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        int parameterIndex = 1;
+        for (Operator operator : operators) {
+            Object value = operator.getValue();
+            if (value instanceof Iterable) {
+                for (Object val : (Collection<?>) value) {
+                    preparedStatement.setObject(parameterIndex++, val);
                 }
+            } else {
+                preparedStatement.setObject(parameterIndex++, value);
             }
-            return preparedStatement;
         }
+        return preparedStatement;
     }
 
     public StringBuilder prepareConditions() {

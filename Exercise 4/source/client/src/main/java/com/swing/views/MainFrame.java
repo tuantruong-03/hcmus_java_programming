@@ -9,6 +9,9 @@ import java.awt.*;
 
 public class MainFrame extends JFrame  {
     private final CardLayout cardLayout = new CardLayout();
+    private AuthPanel authPanel;
+    private MainChatPanel chatPanel;
+
     public MainFrame() {
         super("Chat Client");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -16,24 +19,33 @@ public class MainFrame extends JFrame  {
         setLayout(cardLayout);
 
         JPanel connectPanel = new ConnectPanel(this);
-        JPanel authPanel = new AuthPanel(this);
-        JPanel mainChatPanel = new MainChatPanel(this);
 
         add(connectPanel, Children.CONNECT.getName());
-        add(authPanel, Children.AUTH.getName());
-        add(mainChatPanel, Children.CHAT.getName());
-
-        setVisible(true);
     }
     public void navigateTo(Children panel) {
+        switch (panel) {
+            case AUTH:
+                if (authPanel == null) {
+                    authPanel = new AuthPanel(this);
+                    add(authPanel, Children.AUTH.getName());
+                }
+                break;
+            case MAIN_CHAT:
+                if (chatPanel == null) {
+                    chatPanel = new MainChatPanel(this);
+                    add(chatPanel, Children.MAIN_CHAT.getName());
+                }
+                break;
+        }
         cardLayout.show(getContentPane(), panel.getName());
     }
+
 
     @Getter
     public enum Children {
         AUTH("AuthPanel"),
         CONNECT("ConnectPanel"),
-        CHAT("ChatPanel");
+        MAIN_CHAT("MainChatPanel");
         private final String name;
 
         Children(String name) {

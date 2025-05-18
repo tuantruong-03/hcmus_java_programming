@@ -140,7 +140,7 @@ public class UserRepository {
             if (hashedPassword.isFailure()) {
                 return Result.failure(hashedPassword.getException());
             }
-            statement.addOperator(new Operator.Eq("password", hashedPassword));
+            statement.addOperator(new Operator.Eq("password", hashedPassword.getValue()));
         }
         if (query.page < 0) {
             statement.page(0);

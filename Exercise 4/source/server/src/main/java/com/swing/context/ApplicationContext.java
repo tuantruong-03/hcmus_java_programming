@@ -2,6 +2,8 @@ package com.swing.context;
 
 
 import com.swing.database.Database;
+import com.swing.handlers.AuthHandler;
+import com.swing.handlers.RequestHandler;
 import com.swing.repository.UserRepository;
 
 import lombok.Getter;
@@ -16,10 +18,12 @@ public class ApplicationContext {
     private static ApplicationContext context;
 
     private UserRepository userRepository;
+    private AuthHandler authHandler;
+    private RequestHandler requestHandler;
 
     private ApplicationContext() {}
 
-    public static void init() throws RuntimeException {
+    public static ApplicationContext init() throws RuntimeException {
         context = new ApplicationContext();
 
         try (InputStream input = Database.class.getClassLoader().getResourceAsStream("application.properties")) {
@@ -43,11 +47,14 @@ public class ApplicationContext {
             );
             Database db = new Database(options);
             context.userRepository = new UserRepository(db);
+            context.authHandler = new AuthHandler(context.userRepository);
+            context.requestHandler = new RequestHandler(context.authHandler);
             log.info("Application context initialized successfully.");
         } catch (Exception e) {
-            log.info(e.getMessage());
+            log.warning(e.getMessage());
             throw new RuntimeException("Failed to initialize ApplicationContext", e);
         }
+        return context;
     }
 
     public static ApplicationContext getInstance() {

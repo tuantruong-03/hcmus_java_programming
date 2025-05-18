@@ -47,10 +47,15 @@ public class RegisterUserRequest {
             if (Character.isDigit(request.username.charAt(0))) {
                 return Result.failure(new IllegalArgumentException("Username must not start with a number"));
             }
+            if (request.username.contains(" ")) {
+                return Result.failure(new IllegalArgumentException("Username must not contain spaces"));
+            }
             if (StringUtils.isBlank(request.password) || request.password.length() < 6) {
                 return Result.failure(new IllegalArgumentException("Password must be at least 6 characters long"));
             }
-
+            if (request.password.contains(" ")) {
+                return Result.failure(new IllegalArgumentException("Password must not contain spaces"));
+            }
             return Result.success(request);
         }
     }

@@ -32,7 +32,7 @@ public class AuthPanel extends JPanel {
 
     public void onLoginSuccess() {
         JOptionPane.showMessageDialog(this, "Login successfully!");
-        _parent.navigateTo(MainFrame.Children.CHAT);
+        _parent.navigateTo(MainFrame.Children.MAIN_CHAT);
     }
 
 }

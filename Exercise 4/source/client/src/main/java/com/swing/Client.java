@@ -8,6 +8,6 @@ import javax.swing.*;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Client {
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(MainFrame::new);
+        SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
     }
 }
