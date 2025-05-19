@@ -5,7 +5,7 @@ import lombok.Getter;
 
 import java.util.List;
 
-public class UserListResponse {
+public class UserListOutput {
     List<Item> items;
     int total;
     int page;

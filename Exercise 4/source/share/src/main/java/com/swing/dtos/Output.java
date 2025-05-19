@@ -8,7 +8,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Response<T> {
+public class Output<T> {
     private Error error;
     private Map<String, String> metadata;
     private T body;

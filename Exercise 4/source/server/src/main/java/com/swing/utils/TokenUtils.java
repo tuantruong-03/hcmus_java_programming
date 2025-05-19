@@ -1,5 +1,8 @@
 package com.swing.utils;
 
+import com.swing.models.User;
+
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,7 +25,15 @@ public class TokenUtils {
         tokens.remove(token);
     }
 
-    public static Object getValue(String token) {
-        return tokens.get(token);
+    public static Optional<Object> getValue(String token) {
+        var object = tokens.get(token);
+        if (object == null) {
+            return Optional.empty();
+        }
+        return Optional.of(object);
+    }
+
+    public static Optional<User> getUser(String token) {
+        return getValue(token).filter(User.class::isInstance).map(User.class::cast);
     }
 }

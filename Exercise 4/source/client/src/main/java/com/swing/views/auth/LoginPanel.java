@@ -2,9 +2,9 @@ package com.swing.views.auth;
 
 import com.swing.callers.AuthCaller;
 import com.swing.context.ApplicationContext;
-import com.swing.dtos.Response;
-import com.swing.dtos.user.LoginUserRequest;
-import com.swing.dtos.user.LoginUserResponse;
+import com.swing.dtos.Output;
+import com.swing.dtos.user.LoginUserInput;
+import com.swing.dtos.user.LoginUserOutput;
 import com.swing.types.Result;
 import lombok.extern.java.Log;
 
@@ -48,7 +48,7 @@ class LoginPanel extends JPanel {
         String username = usernameField.getText();
         String password = String.valueOf(passwordField.getPassword());
         try {
-            Result<LoginUserRequest> buildRequestResult = LoginUserRequest.builder()
+            Result<LoginUserInput> buildRequestResult = LoginUserInput.builder()
                     .username(username)
                     .password(password)
                     .build();
@@ -57,14 +57,14 @@ class LoginPanel extends JPanel {
                 return;
             }
             errorLabel.setForeground(new Color(0, 128, 0));  // Success color (green)
-            Result<Response<LoginUserResponse>> registerResult = authCaller.login(buildRequestResult.getValue());
+            Result<Output<LoginUserOutput>> registerResult = authCaller.login(buildRequestResult.getValue());
             if (registerResult.isFailure()) {
                 log.warning("failed to login: " + registerResult.getException());
                 return;
             }
-            Response<LoginUserResponse> response = registerResult.getValue();
-            if (response.getError() != null) {
-                errorLabel.setText("Login failed: " + response.getError().getMessage());
+            Output<LoginUserOutput> output = registerResult.getValue();
+            if (output.getError() != null) {
+                errorLabel.setText("Login failed: " + output.getError().getMessage());
                 return;
             }
             errorLabel.setText("Login successfully!");

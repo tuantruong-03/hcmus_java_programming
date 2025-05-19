@@ -2,11 +2,11 @@ package com.swing.callers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.swing.dtos.Request;
-import com.swing.dtos.Response;
-import com.swing.dtos.user.LoginUserRequest;
-import com.swing.dtos.user.LoginUserResponse;
-import com.swing.dtos.user.RegisterUserRequest;
+import com.swing.dtos.Input;
+import com.swing.dtos.Output;
+import com.swing.dtos.user.LoginUserInput;
+import com.swing.dtos.user.LoginUserOutput;
+import com.swing.dtos.user.RegisterUserInput;
 import com.swing.types.Result;
 import lombok.extern.java.Log;
 
@@ -28,49 +28,49 @@ public class AuthCaller {
         this.mapper = new ObjectMapper();
     }
 
-    public Result<Response<LoginUserResponse>> login(LoginUserRequest request) {
+    public Result<Output<LoginUserOutput>> login(LoginUserInput request) {
         try {
             // Prepare login request
-            Request<LoginUserRequest> req = Request.<LoginUserRequest>builder()
-                    .useCase(Request.UseCase.LOGIN)
+            Input<LoginUserInput> req = Input.<LoginUserInput>builder()
+                    .command(Input.Command.LOGIN)
                     .body(request)
                     .build();
             // Serialize and send the request
             String jsonString = mapper.writeValueAsString(req);
-            output.write(jsonString);
-            output.newLine();
-            output.flush();
+            this.output.write(jsonString);
+            this.output.newLine();
+            this.output.flush();
 
             // Read server response
             String responseJson = input.readLine();
             log.info("Server response: " + responseJson);
-            Response<LoginUserResponse> response = mapper.readValue(responseJson,
-                    new TypeReference<Response<LoginUserResponse>>() {});
-            return Result.success(response);
+            Output<LoginUserOutput> output = mapper.readValue(responseJson,
+                    new TypeReference<>() {});
+            return Result.success(output);
         } catch (IOException ex) {
             return Result.failure(ex);
         }
     }
 
-    public Result<Response<Void>> register(RegisterUserRequest request) {
+    public Result<Output<Void>> register(RegisterUserInput request) {
         try {
             // Prepare register request
-            Request<RegisterUserRequest> req = Request.<RegisterUserRequest>builder()
-                    .useCase(Request.UseCase.REGISTER)
+            Input<RegisterUserInput> req = Input.<RegisterUserInput>builder()
+                    .command(Input.Command.REGISTER)
                     .body(request)
                     .build();
             // Serialize and send the request
             String jsonString = mapper.writeValueAsString(req);
-            output.write(jsonString);
-            output.newLine();
-            output.flush();
+            this.output.write(jsonString);
+            this.output.newLine();
+            this.output.flush();
 
             // Read server response
             String responseJson = input.readLine();
             log.info("Server response: " + responseJson);
-            Response<Void> response = mapper.readValue(responseJson,
-                    new TypeReference<Response<Void>>() {});
-            return Result.success(response);
+            Output<Void> output = mapper.readValue(responseJson,
+                    new TypeReference<>() {});
+            return Result.success(output);
         } catch (IOException ex) {
             return Result.failure(ex);
         }

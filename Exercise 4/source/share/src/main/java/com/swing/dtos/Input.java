@@ -11,13 +11,16 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Request<T> {
-    private UseCase useCase;
+public class Input<T> {
+    private Command command;
     private Map<String, String> metadata;
     private T body;
 
-    public enum UseCase {
+    public enum Command {
         LOGIN,
         REGISTER,
+        SEND_MESSAGE,
+        CREATE_GROUP,
+        DISCONNECT,
     }
 }

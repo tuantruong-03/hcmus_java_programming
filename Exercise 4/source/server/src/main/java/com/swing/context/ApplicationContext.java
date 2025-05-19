@@ -3,7 +3,7 @@ package com.swing.context;
 
 import com.swing.database.Database;
 import com.swing.handlers.AuthHandler;
-import com.swing.handlers.RequestHandler;
+import com.swing.handlers.MessageHandler;
 import com.swing.repository.UserRepository;
 
 import lombok.Getter;
@@ -19,7 +19,7 @@ public class ApplicationContext {
 
     private UserRepository userRepository;
     private AuthHandler authHandler;
-    private RequestHandler requestHandler;
+    private MessageHandler messageHandler;
 
     private ApplicationContext() {}
 
@@ -48,7 +48,7 @@ public class ApplicationContext {
             Database db = new Database(options);
             context.userRepository = new UserRepository(db);
             context.authHandler = new AuthHandler(context.userRepository);
-            context.requestHandler = new RequestHandler(context.authHandler);
+            context.messageHandler = new MessageHandler(context.userRepository);
             log.info("Application context initialized successfully.");
         } catch (Exception e) {
             log.warning(e.getMessage());

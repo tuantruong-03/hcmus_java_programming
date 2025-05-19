@@ -1,7 +1,7 @@
 package com.swing.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.swing.dtos.user.LoginUserRequest;
+import com.swing.dtos.user.LoginUserInput;
 import lombok.extern.java.Log;
 
 import java.io.*;
@@ -29,7 +29,7 @@ public class WorkerThread extends Thread {
                 System.out.println("Received JSON: " + line);
 
                 // Deserialize JSON to LoginUserRequest object
-                LoginUserRequest request = mapper.readValue(line, LoginUserRequest.class);
+                LoginUserInput request = mapper.readValue(line, LoginUserInput.class);
                 System.out.println("Username: " + request.getUsername());
                 System.out.println("Password: " + request.getPassword());
 

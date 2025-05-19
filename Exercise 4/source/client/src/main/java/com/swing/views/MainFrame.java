@@ -36,6 +36,8 @@ public class MainFrame extends JFrame  {
                     add(chatPanel, Children.MAIN_CHAT.getName());
                 }
                 break;
+            default:
+                break;
         }
         cardLayout.show(getContentPane(), panel.getName());
     }

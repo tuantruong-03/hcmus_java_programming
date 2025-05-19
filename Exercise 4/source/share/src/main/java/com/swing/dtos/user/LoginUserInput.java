@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginUserRequest {
+public class LoginUserInput {
     private String username;
     private String password;
 
@@ -21,9 +21,9 @@ public class LoginUserRequest {
 
 
     public static class Builder {
-        private final LoginUserRequest request;
+        private final LoginUserInput request;
         public Builder() {
-            request = new LoginUserRequest();
+            request = new LoginUserInput();
         }
         public Builder username(String username) {
             request.username = username;
@@ -33,7 +33,7 @@ public class LoginUserRequest {
             request.password = password;
             return this;
         }
-        public Result<LoginUserRequest> build() {
+        public Result<LoginUserInput> build() {
             if (StringUtils.isBlank(request.username)) {
                 return Result.failure(new IllegalArgumentException("Username must not be empty or null"));
             }

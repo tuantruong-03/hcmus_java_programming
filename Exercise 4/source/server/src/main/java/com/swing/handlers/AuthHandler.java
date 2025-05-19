@@ -1,16 +1,18 @@
 package com.swing.handlers;
 
-import com.swing.dtos.Request;
-import com.swing.dtos.Response;
-import com.swing.dtos.user.LoginUserRequest;
-import com.swing.dtos.user.LoginUserResponse;
-import com.swing.dtos.user.RegisterUserRequest;
+import com.swing.context.InputContext;
+import com.swing.dtos.Input;
+import com.swing.dtos.Output;
+import com.swing.dtos.user.LoginUserInput;
+import com.swing.dtos.user.LoginUserOutput;
+import com.swing.dtos.user.RegisterUserInput;
 import com.swing.models.User;
 import com.swing.repository.UserRepository;
 import com.swing.types.Result;
 import com.swing.utils.TokenUtils;
 import lombok.extern.java.Log;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Log
@@ -20,22 +22,23 @@ public class AuthHandler {
         this.userRepository = userRepository;
     }
 
-    public Response<Void> register(Request<RegisterUserRequest> request) {
-        RegisterUserRequest body = request.getBody();
+    public void register(InputContext<RegisterUserInput, Void> inputContext) {
+       Input<RegisterUserInput> input = inputContext.getInput();
+        RegisterUserInput body = input.getBody();
         Result<Boolean> doesExist = userRepository.doesExist(UserRepository.Query.builder()
                         .username(body.getUsername())
                 .build());
         if (doesExist.isFailure()) {
             log.warning("failed to register: " + doesExist.getException().getMessage());
-            Response.Error error = Response.Error.interalServerError();
-            return Response.<Void>builder().error(error).build();
+            Output.Error error = Output.Error.interalServerError();
+            inputContext.setOutput(Output.<Void>builder().error(error).build());
         }
         if (Boolean.TRUE.equals(doesExist.getValue())) {
-            Response.Error error = Response.Error.builder()
+            Output.Error error = Output.Error.builder()
                     .code(400)
                     .message("Username already exists")
                     .build();
-            return Response.<Void>builder().error(error).build();
+            inputContext.setOutput(Output.<Void>builder().error(error).build());
         }
         User user = User.builder()
                 .id(UUID.randomUUID().toString())
@@ -46,30 +49,48 @@ public class AuthHandler {
         Result<Void> result = userRepository.createOne(user);
         if (result.isFailure()) {
             log.warning("failed to register: " + result.getException().getMessage());
-            Response.Error error = Response.Error.interalServerError();
-            return Response.<Void>builder().error(error).build();
+            Output.Error error = Output.Error.interalServerError();
+            inputContext.setOutput(Output.<Void>builder().error(error).build());
+
         }
-        return Response.<Void>builder().build();
+        inputContext.setOutput(Output.<Void>builder().build());
     }
 
-    public Response<LoginUserResponse> login(Request<LoginUserRequest> request) {
-        LoginUserRequest body = request.getBody();
+    public void login(InputContext<LoginUserInput, LoginUserOutput> inputContext) {
+        Input<LoginUserInput> input = inputContext.getInput();
+        LoginUserInput body = input.getBody();
         Result<User> user = userRepository.findOne(UserRepository.Query.builder()
                         .username(body.getUsername())
                         .password(body.getPassword())
                 .build());
         if (user.isFailure()) {
             log.warning("failed to login: " + user.getException().getMessage());
-            Response.Error error = Response.Error.interalServerError();
-            return Response.<LoginUserResponse>builder().error(error).build();
+            Output.Error error = Output.Error.interalServerError();
+            inputContext.setOutput(Output.<LoginUserOutput>builder().error(error).build());
         }
         if (user.getValue() == null) {
-            Response.Error error = Response.Error.badRequest("The combination of username and password is incorrect");
-            return Response.<LoginUserResponse>builder().error(error).build();
+            Output.Error error = Output.Error.badRequest("The combination of username and password is incorrect");
+            inputContext.setOutput(Output.<LoginUserOutput>builder().error(error).build());
+
         }
         String token = TokenUtils.register(user.getValue());
-        return Response.<LoginUserResponse>builder()
-                        .body(LoginUserResponse.builder().token(token).build())
+        inputContext.setOutput(Output.<LoginUserOutput>builder()
+                .body(LoginUserOutput.builder().token(token).build())
+                .build());
+    }
+
+    public void validate(InputContext inputContext) {
+        String token = inputContext.getToken();
+        Optional<User> user = TokenUtils.getUser(token);
+        if (user.isEmpty()) {
+            inputContext.setAborted(true);
+            inputContext.setAuthenticated(false);
+            return;
+        }
+        inputContext.setAuthenticated(true);
+        InputContext.Principal principal = InputContext.Principal.builder()
+                .username(user.get().getUsername())
                 .build();
+        inputContext.setPrincipal(principal);
     }
 }

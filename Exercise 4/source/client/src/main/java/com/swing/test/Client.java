@@ -1,7 +1,7 @@
 package com.swing.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.swing.dtos.user.LoginUserRequest;
+import com.swing.dtos.user.LoginUserInput;
 
 import java.io.*;
 import java.net.Socket;
@@ -23,7 +23,7 @@ public class Client {
 
             // Example: send 3 login requests
             for (int i = 1; i <= 3; i++) {
-                LoginUserRequest login = new LoginUserRequest("user" + i, "pass" + i);
+                LoginUserInput login = new LoginUserInput("user" + i, "pass" + i);
 
                 // Serialize object to JSON string
                 String jsonString = mapper.writeValueAsString(login);

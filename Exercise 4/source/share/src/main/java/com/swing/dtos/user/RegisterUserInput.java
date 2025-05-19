@@ -5,7 +5,7 @@ import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
 @Getter
-public class RegisterUserRequest {
+public class RegisterUserInput {
     private String name;
     private String username;
     private String password;
@@ -15,9 +15,9 @@ public class RegisterUserRequest {
     }
 
     public static class Builder {
-        private final RegisterUserRequest request;
+        private final RegisterUserInput request;
         public Builder() {
-            request = new RegisterUserRequest();
+            request = new RegisterUserInput();
         }
         public Builder name(String name) {
             request.name = name;
@@ -34,7 +34,7 @@ public class RegisterUserRequest {
             return this;
         }
 
-        public Result<RegisterUserRequest> build() {
+        public Result<RegisterUserInput> build() {
             if (StringUtils.isBlank(request.name)) {
                 return Result.failure(new IllegalArgumentException("Name must not be empty or null"));
             }
