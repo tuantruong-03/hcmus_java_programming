@@ -42,5 +42,6 @@ public class InputContext<I, O> {
     @Getter
     public static class Principal {
         private String username;
+        private String userId;
     }
 }

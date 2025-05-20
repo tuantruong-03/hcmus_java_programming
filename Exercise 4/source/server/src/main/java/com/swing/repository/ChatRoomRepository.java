@@ -1,12 +1,11 @@
 package com.swing.repository;
 
 import com.swing.database.Database;
-import com.swing.models.User;
+import com.swing.models.ChatRoom;
 import com.swing.repository.query.Operator;
 import com.swing.repository.query.Sort;
 import com.swing.repository.query.Statement;
 import com.swing.types.Result;
-import com.swing.utils.HashUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,43 +17,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Log
-public class UserRepository {
+public class ChatRoomRepository {
     private final Database db;
 
-    private static final String TABLE_NAME = "user";
+    private static final String TABLE_NAME = "chat_room";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_NAME = "name";
-    private static final String COLUMN_USERNAME = "username";
-    private static final String COLUMN_PASSWORD = "password";
+    private static final String COLUMN_AVATAR = "avatar";
+    private static final String COLUMN_IS_GROUP= "is_group";
     private static final String COLUMN_CREATED_AT = "created_at";
     private static final String COLUMN_UPDATED_AT = "updated_at";
-
-    public UserRepository(Database db) {
+    public ChatRoomRepository(Database db) {
         this.db = db;
     }
-    public Result<Void> createOne(User user) {
-        String sql = "INSERT INTO user (id, name, username, password, created_at) VALUES (?, ?, ?, ?, ?)";
+    public Result<Void> createOne(ChatRoom chatRoom) {
+        String sql = "INSERT INTO chatroom_user (id, name, avatar, is_group, created_at) VALUES (?, ?, ?, ?)";
         int columnIndex = 1;
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(columnIndex++, user.getId());
-            stmt.setString(columnIndex++, user.getName());
-            stmt.setString(columnIndex++, user.getUsername());
-            var hashedPassword = HashUtils.sha256HashToHexString(user.getPassword());
-            if (hashedPassword.isFailure()) {
-                return Result.failure(hashedPassword.getException());
-            }
-            stmt.setString(columnIndex++, hashedPassword.getValue());
+            stmt.setString(columnIndex++, chatRoom.getId());
+            stmt.setString(columnIndex++, chatRoom.getName());
+            stmt.setString(columnIndex++, chatRoom.getAvatar());
+            stmt.setBoolean(columnIndex++, chatRoom.getIsGroup());
             stmt.setDate(columnIndex, new Date(new java.util.Date().getTime()));
             stmt.executeUpdate();
-            log.info("User created successfully.");
+            log.info("chatRoomUser created successfully.");
             return Result.success(null);
         } catch (SQLException e) {
             return Result.failure(e);
         }
     }
 
-    public Result<User> findOne(Query query) {
+    public Result<ChatRoom> findOne(Query query) {
         query.setLimit(1);
         var statement = buildStatement(query);
         if (statement.isFailure()) {
@@ -64,15 +58,15 @@ public class UserRepository {
              PreparedStatement stmt = statement.getValue().prepareGetQuery(conn);
              ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
-                User user = User.builder()
+                ChatRoom chatRoom = ChatRoom.builder()
                         .id(rs.getString(COLUMN_ID))
                         .name(rs.getString(COLUMN_NAME))
-                        .username(rs.getString(COLUMN_USERNAME))
-                        .password(rs.getString(COLUMN_PASSWORD))
+                        .avatar(rs.getString(COLUMN_AVATAR))
+                        .isGroup(rs.getBoolean(COLUMN_IS_GROUP))
                         .createdAt(rs.getDate(COLUMN_CREATED_AT))
                         .updatedAt(rs.getDate(COLUMN_UPDATED_AT))
                         .build();
-                return Result.success(user);
+                return Result.success(chatRoom);
             }
             return Result.success(null);
         } catch (SQLException e) {
@@ -80,27 +74,27 @@ public class UserRepository {
         }
     }
 
-    public Result<List<User>> findMany(Query query) {
+    public Result<List<ChatRoom>> findMany(Query query) {
         var statement = buildStatement(query);
         if (statement.isFailure()) {
             return Result.failure(statement.getException());
         }
-        List<User> users = new ArrayList<>();
+        List<ChatRoom> chatRooms = new ArrayList<>();
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = statement.getValue().prepareGetQuery(conn);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                User user = User.builder()
+                ChatRoom chatRoom = ChatRoom.builder()
                         .id(rs.getString(COLUMN_ID))
                         .name(rs.getString(COLUMN_NAME))
-                        .username(rs.getString(COLUMN_USERNAME))
-                        .password(rs.getString(COLUMN_PASSWORD))
+                        .avatar(rs.getString(COLUMN_AVATAR))
+                        .isGroup(rs.getBoolean(COLUMN_IS_GROUP))
                         .createdAt(rs.getDate(COLUMN_CREATED_AT))
                         .updatedAt(rs.getDate(COLUMN_UPDATED_AT))
                         .build();
-                users.add(user);
+                chatRooms.add(chatRoom);
             }
-            return Result.success(users);
+            return Result.success(chatRooms);
 
         } catch (SQLException e) {
             return Result.failure(e);
@@ -124,10 +118,10 @@ public class UserRepository {
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = statement.getValue().prepareCountQuery(conn);
              ResultSet rs = stmt.executeQuery()) {
-             if (rs.next()) {
-                 count = rs.getInt(1);
-             }
-             return Result.success(count);
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+            return Result.success(count);
 
         } catch (SQLException e) {
             return Result.failure(e);
@@ -142,15 +136,11 @@ public class UserRepository {
         if (!StringUtils.isBlank(query.getName())) {
             statement.addOperator(new Operator.Eq(COLUMN_NAME, query.getName()));
         }
-        if (!StringUtils.isBlank(query.getUsername())) {
-            statement.addOperator(new Operator.Eq(COLUMN_USERNAME, query.getUsername()));
+        if (query.isGroup != null) {
+            statement.addOperator(new Operator.Eq(COLUMN_IS_GROUP, query.isGroup));
         }
-        if (!StringUtils.isBlank(query.getPassword())) {
-            var hashedPassword = HashUtils.sha256HashToHexString(query.getPassword());
-            if (hashedPassword.isFailure()) {
-                return Result.failure(hashedPassword.getException());
-            }
-            statement.addOperator(new Operator.Eq(COLUMN_PASSWORD, hashedPassword.getValue()));
+        if (query.getInIds() != null && !query.getInIds().isEmpty()) {
+            statement.addOperator(new Operator.In(COLUMN_ID, query.getInIds()));
         }
         if (query.page < 0) {
             statement.page(0);
@@ -166,8 +156,8 @@ public class UserRepository {
     public static class Query {
         private String id;
         private String name;
-        private String username;
-        private String password;
+        private List<String> inIds;
+        private Boolean isGroup;
         private int page;
         @Setter
         private int limit;

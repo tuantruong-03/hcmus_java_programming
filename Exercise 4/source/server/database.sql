@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS chat_room (
 );
 
 CREATE TABLE IF NOT EXISTS chatroom_user (
-    chat_room_id VARCHAR(255),
+    chatroom_id VARCHAR(255),
     user_id VARCHAR(255),
-    PRIMARY KEY (chat_room_id, user_id),
-    FOREIGN KEY (chat_room_id) REFERENCES chat_room(id) ON DELETE CASCADE,
+    PRIMARY KEY (chatroom_id, user_id),
+    FOREIGN KEY (chatroom_id) REFERENCES chat_room(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );

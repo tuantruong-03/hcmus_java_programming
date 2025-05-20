@@ -20,7 +20,7 @@ public class Input<T> {
         LOGIN,
         REGISTER,
         SEND_MESSAGE,
-        CREATE_GROUP,
+        CREATE_CHATROOM,
         DISCONNECT,
     }
 }

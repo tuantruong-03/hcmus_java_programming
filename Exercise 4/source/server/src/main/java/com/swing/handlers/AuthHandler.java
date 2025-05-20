@@ -51,7 +51,7 @@ public class AuthHandler {
             log.warning("failed to register: " + result.getException().getMessage());
             Output.Error error = Output.Error.interalServerError();
             inputContext.setOutput(Output.<Void>builder().error(error).build());
-
+            return;
         }
         inputContext.setOutput(Output.<Void>builder().build());
     }
@@ -71,7 +71,7 @@ public class AuthHandler {
         if (user.getValue() == null) {
             Output.Error error = Output.Error.badRequest("The combination of username and password is incorrect");
             inputContext.setOutput(Output.<LoginUserOutput>builder().error(error).build());
-
+            return;
         }
         String token = TokenUtils.register(user.getValue());
         inputContext.setOutput(Output.<LoginUserOutput>builder()
@@ -79,7 +79,7 @@ public class AuthHandler {
                 .build());
     }
 
-    public void validate(InputContext inputContext) {
+    public void validate(InputContext<?,?> inputContext) {
         String token = inputContext.getToken();
         Optional<User> user = TokenUtils.getUser(token);
         if (user.isEmpty()) {

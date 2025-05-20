@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swing.context.InputContext;
 import com.swing.dtos.Input;
 import com.swing.dtos.Output;
+import com.swing.dtos.chatroom.CreateChatRoomInput;
+import com.swing.dtos.chatroom.CreateChatRoomOutput;
 import com.swing.dtos.message.MessageInput;
 import com.swing.dtos.message.MessageOutput;
 import com.swing.dtos.user.LoginUserInput;
@@ -22,14 +24,16 @@ import java.nio.charset.StandardCharsets;
 public class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private final AuthHandler authHandler;
-    private final MessageHandler messageHandler;
+    private final ChatRoomHandler chatRoomHandler;
     private final BufferedReader in;
     private final BufferedWriter out;
 
-    public ClientHandler(Socket clientSocket, AuthHandler authHandler, MessageHandler messageHandler) throws IOException {
+    public ClientHandler(Socket clientSocket
+            ,AuthHandler authHandler
+            ,ChatRoomHandler chatRoomHandler) throws IOException {
         this.clientSocket = clientSocket;
         this.authHandler = authHandler;
-        this.messageHandler = messageHandler;
+        this.chatRoomHandler = chatRoomHandler;
         this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
         this.out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
     }
@@ -65,24 +69,25 @@ public class ClientHandler implements Runnable {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode rootNode = mapper.readTree(jsonInput);
             String useCaseStr = rootNode.get("command").asText();
-            // Step 3: Determine the use case and parse accordingly
             if (Input.Command.REGISTER.toString().equals(useCaseStr)) {
                 Input<RegisterUserInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
                 InputContext<RegisterUserInput,Void> inputContext = new InputContext<>(input);
                 HandlerRegistry.withInputContext(inputContext).register(authHandler::register).handle();
                 return Result.success(inputContext.getOutput());
+
             } else if (Input.Command.LOGIN.toString().equals(useCaseStr)) {
                 Input<LoginUserInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
                 InputContext<LoginUserInput,LoginUserOutput> inputContext = new InputContext<>(input);
                 HandlerRegistry.withInputContext(inputContext).register(authHandler::login).handle();
                 return Result.success(inputContext.getOutput());
-            } else if (Input.Command.SEND_MESSAGE.toString().equals(useCaseStr)) {
-                Input<MessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
-                InputContext<MessageInput, MessageOutput> inputContext = new InputContext<>(input);
-                HandlerRegistry.withInputContext(inputContext).register(authHandler::validate, messageHandler::send).handle();
-                return Result.success(inputContext.getOutput());
-            }
 
+            } else if (Input.Command.CREATE_CHATROOM.toString().equals(useCaseStr)) {
+                Input<CreateChatRoomInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                InputContext<CreateChatRoomInput, CreateChatRoomOutput> inputContext = new InputContext<>(input);
+                HandlerRegistry.withInputContext(inputContext).register(authHandler::validate, chatRoomHandler::create).handle();
+                return Result.success(inputContext.getOutput());
+
+            }
             return Result.failure(new IllegalArgumentException("Invalid UseCase: " + useCaseStr));
         } catch (ClassCastException e) {
             return Result.failure(new IllegalArgumentException("Invalid request type: " + e.getMessage()));

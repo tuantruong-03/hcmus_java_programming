@@ -19,8 +19,8 @@ public class HandlerRegistry<I, O> {
         return handlerRegistry;
     }
 
-    @SuppressWarnings("unchecked")
-    public HandlerRegistry<I, O> register(InputHandler<I, O>... handlers) {
+    @SafeVarargs
+    public final HandlerRegistry<I, O> register(InputHandler<I, O>... handlers) {
         inputHandlers.addAll(Arrays.asList(handlers));
         return this;
     }
