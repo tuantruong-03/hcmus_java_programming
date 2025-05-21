@@ -2,9 +2,9 @@ package com.swing.views.auth;
 
 import com.swing.callers.AuthCaller;
 import com.swing.context.ApplicationContext;
-import com.swing.dtos.Output;
-import com.swing.dtos.user.LoginUserInput;
-import com.swing.dtos.user.LoginUserOutput;
+import com.swing.io.Output;
+import com.swing.io.user.LoginUserInput;
+import com.swing.io.user.LoginUserOutput;
 import com.swing.types.Result;
 import lombok.extern.java.Log;
 

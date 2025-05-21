@@ -2,7 +2,7 @@ package com.swing.views.auth;
 
 import com.swing.callers.AuthCaller;
 import com.swing.context.ApplicationContext;
-import com.swing.dtos.user.RegisterUserInput;
+import com.swing.io.user.RegisterUserInput;
 import com.swing.types.Result;
 import lombok.extern.java.Log;
 
@@ -72,6 +72,7 @@ class RegisterPanel extends JPanel {
             Result<?> registerResult = authCaller.register(buildRequestResult.getValue());
             if (registerResult.isFailure()) {
                 log.warning("failed to register: " + registerResult.getException());
+                errorLabel.setText("Registration failed: " + buildRequestResult.getException().getMessage());
                 return;
             }
             errorLabel.setText("Register successfully!");

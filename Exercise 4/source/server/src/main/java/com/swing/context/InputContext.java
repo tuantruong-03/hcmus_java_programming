@@ -1,7 +1,7 @@
 package com.swing.context;
 
-import com.swing.dtos.Input;
-import com.swing.dtos.Output;
+import com.swing.io.Input;
+import com.swing.io.Output;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

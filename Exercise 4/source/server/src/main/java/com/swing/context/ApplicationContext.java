@@ -4,6 +4,7 @@ package com.swing.context;
 import com.swing.database.Database;
 import com.swing.handlers.AuthHandler;
 import com.swing.handlers.ChatRoomHandler;
+import com.swing.publishers.EventPublisher;
 import com.swing.repository.ChatRoomRepository;
 import com.swing.repository.ChatRoomUserRepository;
 import com.swing.repository.MessageRepository;
@@ -27,9 +28,11 @@ public class ApplicationContext {
     private AuthHandler authHandler;
     private ChatRoomHandler chatRoomHandler;
 
+    private EventPublisher eventPublisher;
+
     private ApplicationContext() {}
 
-    public static ApplicationContext init() throws RuntimeException {
+    public static void init() throws RuntimeException {
         context = new ApplicationContext();
 
         try (InputStream input = Database.class.getClassLoader().getResourceAsStream("application.properties")) {
@@ -63,7 +66,6 @@ public class ApplicationContext {
             log.warning(e.getMessage());
             throw new RuntimeException("Failed to initialize ApplicationContext", e);
         }
-        return context;
     }
 
     public static ApplicationContext getInstance() {

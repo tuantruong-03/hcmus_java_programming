@@ -1,4 +1,4 @@
-package com.swing.dtos.chatroom;
+package com.swing.io.chatroom;
 
 
 import lombok.Builder;

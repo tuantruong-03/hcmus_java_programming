@@ -18,7 +18,7 @@ public class ApplicationContext {
     private ApplicationContext() {
     }
 
-    public static Exception init(SocketConnection socketConnection) throws RuntimeException {
+    public static Exception init(SocketConnection socketConnection) {
         context = new ApplicationContext();
         try (InputStream input = ApplicationContext.class.getClassLoader().getResourceAsStream("application.properties")) {
             context.socket = new Socket(socketConnection.getHost(), socketConnection.getPort());

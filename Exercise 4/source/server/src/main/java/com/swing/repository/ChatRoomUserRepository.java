@@ -29,7 +29,7 @@ public class ChatRoomUserRepository {
     }
 
     public Result<Void> createOne(ChatRoomUser chatRoomUser) {
-        String sql = "INSERT INTO chatroom_user (chatroom_id, user_id) VALUES (?, ?)";
+        String sql = "INSERT INTO " + TABLE_NAME + " (chatroom_id, user_id) VALUES (?, ?)";
         int columnIndex = 1;
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

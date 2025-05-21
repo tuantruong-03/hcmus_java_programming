@@ -1,7 +1,7 @@
 package com.swing.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.swing.dtos.user.LoginUserInput;
+import com.swing.io.user.LoginUserInput;
 
 import java.io.*;
 import java.net.Socket;

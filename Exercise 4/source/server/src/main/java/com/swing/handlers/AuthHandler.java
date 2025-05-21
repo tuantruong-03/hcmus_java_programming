@@ -1,11 +1,12 @@
 package com.swing.handlers;
 
 import com.swing.context.InputContext;
-import com.swing.dtos.Input;
-import com.swing.dtos.Output;
-import com.swing.dtos.user.LoginUserInput;
-import com.swing.dtos.user.LoginUserOutput;
-import com.swing.dtos.user.RegisterUserInput;
+import com.swing.io.Input;
+import com.swing.io.Output;
+import com.swing.io.user.LoginUserInput;
+import com.swing.io.user.LoginUserOutput;
+import com.swing.io.user.RegisterUserInput;
+import com.swing.io.user.RegisterUserOutput;
 import com.swing.models.User;
 import com.swing.repository.UserRepository;
 import com.swing.types.Result;
@@ -22,7 +23,7 @@ public class AuthHandler {
         this.userRepository = userRepository;
     }
 
-    public void register(InputContext<RegisterUserInput, Void> inputContext) {
+    public void register(InputContext<RegisterUserInput, RegisterUserOutput> inputContext) {
        Input<RegisterUserInput> input = inputContext.getInput();
         RegisterUserInput body = input.getBody();
         Result<Boolean> doesExist = userRepository.doesExist(UserRepository.Query.builder()
@@ -31,14 +32,14 @@ public class AuthHandler {
         if (doesExist.isFailure()) {
             log.warning("failed to register: " + doesExist.getException().getMessage());
             Output.Error error = Output.Error.interalServerError();
-            inputContext.setOutput(Output.<Void>builder().error(error).build());
+            inputContext.setOutput(Output.<RegisterUserOutput>builder().error(error).build());
         }
         if (Boolean.TRUE.equals(doesExist.getValue())) {
             Output.Error error = Output.Error.builder()
                     .code(400)
                     .message("Username already exists")
                     .build();
-            inputContext.setOutput(Output.<Void>builder().error(error).build());
+            inputContext.setOutput(Output.<RegisterUserOutput>builder().error(error).build());
         }
         User user = User.builder()
                 .id(UUID.randomUUID().toString())
@@ -50,10 +51,12 @@ public class AuthHandler {
         if (result.isFailure()) {
             log.warning("failed to register: " + result.getException().getMessage());
             Output.Error error = Output.Error.interalServerError();
-            inputContext.setOutput(Output.<Void>builder().error(error).build());
+            inputContext.setOutput(Output.<RegisterUserOutput>builder().error(error).build());
             return;
         }
-        inputContext.setOutput(Output.<Void>builder().build());
+        inputContext.setOutput(Output.<RegisterUserOutput>builder()
+                        .body(RegisterUserOutput.builder().build())
+                .build());
     }
 
     public void login(InputContext<LoginUserInput, LoginUserOutput> inputContext) {

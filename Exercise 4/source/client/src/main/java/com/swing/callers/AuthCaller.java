@@ -2,11 +2,11 @@ package com.swing.callers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.swing.dtos.Input;
-import com.swing.dtos.Output;
-import com.swing.dtos.user.LoginUserInput;
-import com.swing.dtos.user.LoginUserOutput;
-import com.swing.dtos.user.RegisterUserInput;
+import com.swing.io.Input;
+import com.swing.io.Output;
+import com.swing.io.user.LoginUserInput;
+import com.swing.io.user.LoginUserOutput;
+import com.swing.io.user.RegisterUserInput;
 import com.swing.types.Result;
 import lombok.extern.java.Log;
 

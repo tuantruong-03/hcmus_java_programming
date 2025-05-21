@@ -1,4 +1,4 @@
-package com.swing.dtos;
+package com.swing.io;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,5 +22,6 @@ public class Input<T> {
         SEND_MESSAGE,
         CREATE_CHATROOM,
         DISCONNECT,
+        HANDLE_EVENT,
     }
 }

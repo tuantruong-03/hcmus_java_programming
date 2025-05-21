@@ -1,30 +1,33 @@
 package com.swing.context;
 
+import com.swing.events.Event;
 import com.swing.handlers.ClientHandler;
 import lombok.extern.java.Log;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Properties;
+import java.util.*;
 
 
 @Log
 public class SocketManager {
     private ServerSocket serverSocket;
-    private ApplicationContext applicationContext;
-
+    private Map<String, ClientHandler> clients; // clientId - clientHandler
+    private Map<String, Set<String>> topics; // topic - []clientId
     private static SocketManager socketManager;
+
 
     private SocketManager() {
     }
 
-    public static SocketManager init(ApplicationContext applicationContext) throws RuntimeException {
+    public static SocketManager init() throws RuntimeException {
         if (socketManager != null) {
             throw new RuntimeException("SocketManager has already been initialized");
         }
         socketManager = new SocketManager();
-        socketManager.applicationContext = applicationContext;
+        socketManager.clients = new HashMap<>();
+        socketManager.topics = new HashMap<>();
         try (InputStream input = SocketManager.class.getClassLoader().getResourceAsStream("application.properties")) {
             Properties props = new Properties();
             if (input == null) {
@@ -44,10 +47,32 @@ public class SocketManager {
     public void run() throws IOException {
         while (true) {
             Socket socket = socketManager.serverSocket.accept();
-            ClientHandler clientHandler = new ClientHandler(socket
-                    , applicationContext.getAuthHandler()
-                    , applicationContext.getChatRoomHandler());
-            new Thread(clientHandler).start();
+            String clientId = String.format("%s:%s", socket.getInetAddress().getHostAddress(), socket.getPort());
+            ClientHandler clientHandler = new ClientHandler(clientId, socketManager, socket);
+            clients.put(clientId, clientHandler);
+            Thread.startVirtualThread(clientHandler);
+        }
+    }
+
+    public void onEvent(Event event) {
+        switch (event.getType()) {
+            case Event.Type.LOGIN:
+                Event.LoginPayload loginPayload = (Event.LoginPayload) event.getPayload();
+                for (ClientHandler clientHandler : clients.values()) {
+                    if (clientHandler.getClientId().equals(loginPayload.getClientId())) continue;
+                    clientHandler.onEvent(event);
+                }
+                break;
+            case Event.Type.SEND_MESSAGE:
+                Event.SendMessagePayload sendMessagePayload = (Event.SendMessagePayload) event.getPayload();
+                for (ClientHandler clientHandler : clients.values()) {
+                    if (sendMessagePayload.getReceiverIds().contains(clientHandler.getClientId())) {
+                        clientHandler.onEvent(event);
+                    }
+                }
+                break;
+            default:
+                break;
         }
     }
 }

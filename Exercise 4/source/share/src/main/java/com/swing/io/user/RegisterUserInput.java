@@ -1,17 +1,12 @@
-package com.swing.dtos.user;
+package com.swing.io.user;
 
 import com.swing.types.Result;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @Getter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class LoginUserInput {
+public class RegisterUserInput {
+    private String name;
     private String username;
     private String password;
 
@@ -19,21 +14,30 @@ public class LoginUserInput {
         return new Builder();
     }
 
-
     public static class Builder {
-        private final LoginUserInput request;
+        private final RegisterUserInput request;
         public Builder() {
-            request = new LoginUserInput();
+            request = new RegisterUserInput();
         }
+        public Builder name(String name) {
+            request.name = name;
+            return this;
+        }
+
         public Builder username(String username) {
             request.username = username;
             return this;
         }
+
         public Builder password(String password) {
             request.password = password;
             return this;
         }
-        public Result<LoginUserInput> build() {
+
+        public Result<RegisterUserInput> build() {
+            if (StringUtils.isBlank(request.name)) {
+                return Result.failure(new IllegalArgumentException("Name must not be empty or null"));
+            }
             if (StringUtils.isBlank(request.username)) {
                 return Result.failure(new IllegalArgumentException("Username must not be empty or null"));
             }

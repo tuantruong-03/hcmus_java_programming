@@ -1,4 +1,4 @@
-package com.swing.dtos.user;
+package com.swing.io.user;
 
 public class UserOutput {
 }

@@ -8,7 +8,7 @@ import com.swing.context.SocketManager;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Server {
     public static void main(String[] args) throws Exception {
-        ApplicationContext applicationContext = ApplicationContext.init();
-        SocketManager.init(applicationContext).run();
+        ApplicationContext.init();
+        SocketManager.init().run();
     }
 }

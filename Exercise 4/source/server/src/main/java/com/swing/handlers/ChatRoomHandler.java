@@ -1,10 +1,10 @@
 package com.swing.handlers;
 
 import com.swing.context.InputContext;
-import com.swing.dtos.Input;
-import com.swing.dtos.Output;
-import com.swing.dtos.chatroom.CreateChatRoomInput;
-import com.swing.dtos.chatroom.CreateChatRoomOutput;
+import com.swing.io.Input;
+import com.swing.io.Output;
+import com.swing.io.chatroom.CreateChatRoomInput;
+import com.swing.io.chatroom.CreateChatRoomOutput;
 import com.swing.models.ChatRoom;
 import com.swing.models.ChatRoomUser;
 import com.swing.repository.ChatRoomRepository;
@@ -12,7 +12,6 @@ import com.swing.repository.ChatRoomUserRepository;
 import lombok.extern.java.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 

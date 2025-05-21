@@ -21,7 +21,7 @@ public class MessageRepository {
     private final Database db;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static final String TABLE_NAME = "message";
+    private static final String TABLE_NAME = "messages";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_CHAT_ROOM_ID = "chat_room_id";
     private static final String COLUMN_CONTENT = "content";

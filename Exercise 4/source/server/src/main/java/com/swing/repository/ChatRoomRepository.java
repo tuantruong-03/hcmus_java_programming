@@ -20,7 +20,7 @@ import java.util.List;
 public class ChatRoomRepository {
     private final Database db;
 
-    private static final String TABLE_NAME = "chat_room";
+    private static final String TABLE_NAME = "chat_rooms";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_NAME = "name";
     private static final String COLUMN_AVATAR = "avatar";
@@ -31,7 +31,7 @@ public class ChatRoomRepository {
         this.db = db;
     }
     public Result<Void> createOne(ChatRoom chatRoom) {
-        String sql = "INSERT INTO chatroom_user (id, name, avatar, is_group, created_at) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO " + TABLE_NAME +" (id, name, avatar, is_group, created_at) VALUES (?, ?, ?, ?)";
         int columnIndex = 1;
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

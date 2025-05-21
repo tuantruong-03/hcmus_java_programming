@@ -21,7 +21,7 @@ import java.util.List;
 public class UserRepository {
     private final Database db;
 
-    private static final String TABLE_NAME = "user";
+    private static final String TABLE_NAME = "users";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_NAME = "name";
     private static final String COLUMN_USERNAME = "username";
@@ -33,7 +33,7 @@ public class UserRepository {
         this.db = db;
     }
     public Result<Void> createOne(User user) {
-        String sql = "INSERT INTO user (id, name, username, password, created_at) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO " + TABLE_NAME + " (id, name, username, password, created_at) VALUES (?, ?, ?, ?, ?)";
         int columnIndex = 1;
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
