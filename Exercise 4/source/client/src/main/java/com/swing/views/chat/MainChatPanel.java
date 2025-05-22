@@ -13,7 +13,7 @@ public class MainChatPanel extends JPanel {
     private JButton createGroupButton, viewHistoryButton, logoutButton;
     private JPanel chatPanelContainer;
     private CardLayout chatCardLayout;
-    private List<ChatPanel> chatPanels;
+    private List<ChatRoomPanel> chatRoomPanels;
 
     public MainChatPanel(MainFrame parent) {
         setSize(800, 600);
@@ -45,17 +45,17 @@ public class MainChatPanel extends JPanel {
         chatPanelContainer = new JPanel(chatCardLayout);
         add(chatPanelContainer, BorderLayout.CENTER);
 
-        chatPanels = new ArrayList<>();
-        ChatPanel group1ChatPanel = new GroupChatPanel("Group 1");
-        ChatPanel user1ChatPanel = new UserChatPanel("User 1");
-        ChatPanel user2ChatPanel = new UserChatPanel("User 2");
+        chatRoomPanels = new ArrayList<>();
+        ChatRoomPanel group1ChatRoomPanel = new GroupChatRoomPanel("Group 1");
+        ChatRoomPanel user1ChatRoomPanel = new UserChatRoomPanel("User 1");
+        ChatRoomPanel user2ChatRoomPanel = new UserChatRoomPanel("User 2");
         // Seed data
-        chatPanels.add(group1ChatPanel);
-        chatPanels.add(user1ChatPanel);
-        chatPanels.add(user2ChatPanel);
-        chatPanelContainer.add(group1ChatPanel, group1ChatPanel.getChatId());
-        chatPanelContainer.add(user1ChatPanel, user1ChatPanel.getChatId());
-        chatPanelContainer.add(user2ChatPanel, user2ChatPanel.getChatId());
+        chatRoomPanels.add(group1ChatRoomPanel);
+        chatRoomPanels.add(user1ChatRoomPanel);
+        chatRoomPanels.add(user2ChatRoomPanel);
+        chatPanelContainer.add(group1ChatRoomPanel, group1ChatRoomPanel.getChatId());
+        chatPanelContainer.add(user1ChatRoomPanel, user1ChatRoomPanel.getChatId());
+        chatPanelContainer.add(user2ChatRoomPanel, user2ChatRoomPanel.getChatId());
 
         userList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -68,9 +68,9 @@ public class MainChatPanel extends JPanel {
     }
 
     public void openChatPanel(String chatId) {
-        ChatPanel chatPanel = chatPanels.stream().filter(cp -> cp.getChatName().equals(chatId)).findFirst().orElse(null);
-        if (chatPanel != null) {
-            chatCardLayout.show(chatPanelContainer, chatPanel.getChatId());
+        ChatRoomPanel chatRoomPanel = chatRoomPanels.stream().filter(cp -> cp.getChatName().equals(chatId)).findFirst().orElse(null);
+        if (chatRoomPanel != null) {
+            chatCardLayout.show(chatPanelContainer, chatRoomPanel.getChatId());
         }
     }
 

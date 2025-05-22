@@ -6,10 +6,9 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class Chat {
+public class ChatRoom {
     private String id;
     private String name;
     private String senderId;
     private String receiverId;
-    private String message;
 }

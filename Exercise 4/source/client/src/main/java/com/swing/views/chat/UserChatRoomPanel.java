@@ -1,9 +1,9 @@
 package com.swing.views.chat;
 
 
-public class UserChatPanel extends ChatPanel {
+public class UserChatRoomPanel extends ChatRoomPanel {
 
-    public UserChatPanel(String chatId) {
+    public UserChatRoomPanel(String chatId) {
         super(chatId);
     }
 

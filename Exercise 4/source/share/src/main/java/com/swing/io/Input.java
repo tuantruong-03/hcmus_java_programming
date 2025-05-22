@@ -18,10 +18,11 @@ public class Input<T> {
 
     public enum Command {
         LOGIN,
+        LOGOUT,
+        KEEP_CONNECTION_ALIVE,
         REGISTER,
         SEND_MESSAGE,
         CREATE_CHATROOM,
         DISCONNECT,
-        HANDLE_EVENT,
     }
 }

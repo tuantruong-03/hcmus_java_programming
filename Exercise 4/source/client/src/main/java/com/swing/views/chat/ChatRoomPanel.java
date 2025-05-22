@@ -1,19 +1,19 @@
 package com.swing.views.chat;
 
-import com.swing.models.Chat;
+import com.swing.models.ChatRoom;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-public abstract class ChatPanel extends JPanel {
+public abstract class ChatRoomPanel extends JPanel {
     protected JPanel chatArea;
     protected JTextField messageField;
     protected JButton sendButton;
     protected JButton sendFileButton;
-    protected Chat chat;
+    protected ChatRoom chatRoom;
 
-    protected ChatPanel(String chatId) {
+    protected ChatRoomPanel(String chatId) {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createTitledBorder("Chat Title"));
         chatArea = new JPanel();
@@ -43,7 +43,7 @@ public abstract class ChatPanel extends JPanel {
         sendButton.addActionListener(e -> sendMessage());
         sendFileButton.addActionListener(e -> sendFile());
 
-        chat = Chat.builder()
+        chatRoom = ChatRoom.builder()
                 .id(chatId)
                 .name(chatId)
                 .build();
@@ -57,10 +57,10 @@ public abstract class ChatPanel extends JPanel {
     }
 
     public String getChatName() {
-        return chat.getName();
+        return chatRoom.getName();
     }
     public String getChatId() {
-        return chat.getId();
+        return chatRoom.getId();
     }
 
     protected abstract void sendMessage();

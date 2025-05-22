@@ -10,7 +10,7 @@ import java.util.Date;
 public class ChatRoom {
     private String id;
     private String name;
-    private String avatar;
+    private String image;
     private Boolean isGroup;
     private Date createdAt;
     private Date updatedAt;

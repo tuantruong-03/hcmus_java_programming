@@ -14,7 +14,6 @@ import java.util.*;
 public class SocketManager {
     private ServerSocket serverSocket;
     private Map<String, ClientHandler> clients; // clientId - clientHandler
-    private Map<String, Set<String>> topics; // topic - []clientId
     private static SocketManager socketManager;
 
 
@@ -27,7 +26,6 @@ public class SocketManager {
         }
         socketManager = new SocketManager();
         socketManager.clients = new HashMap<>();
-        socketManager.topics = new HashMap<>();
         try (InputStream input = SocketManager.class.getClassLoader().getResourceAsStream("application.properties")) {
             Properties props = new Properties();
             if (input == null) {
@@ -46,12 +44,18 @@ public class SocketManager {
 
     public void run() throws IOException {
         while (true) {
-            Socket socket = socketManager.serverSocket.accept();
-            String clientId = String.format("%s:%s", socket.getInetAddress().getHostAddress(), socket.getPort());
-            ClientHandler clientHandler = new ClientHandler(clientId, socketManager, socket);
-            clients.put(clientId, clientHandler);
+            Socket clientSocket = socketManager.serverSocket.accept();
+            ClientHandler clientHandler = new ClientHandler(socketManager, clientSocket);
             Thread.startVirtualThread(clientHandler);
         }
+    }
+
+    public void removeClient(String clientId) {
+        clients.remove(clientId);
+    }
+
+    public void keepAlive(ClientHandler clientHandler) {
+        clients.put(clientHandler.getClientId(), clientHandler);
     }
 
     public void onEvent(Event event) {

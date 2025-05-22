@@ -67,6 +67,12 @@ class LoginPanel extends JPanel {
                 errorLabel.setText("Login failed: " + output.getError().getMessage());
                 return;
             }
+            Exception exception = ApplicationContext.getInstance().runEventDispatcher();
+            if (exception != null) {
+                log.warning(exception.getMessage());
+                errorLabel.setText("Login failed: " + exception.getMessage());
+                return;
+            }
             errorLabel.setText("Login successfully!");
             _parent.onLoginSuccess();
 

@@ -2,6 +2,7 @@ package com.swing.callers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swing.context.SocketConnection;
 import com.swing.io.Input;
 import com.swing.io.Output;
 import com.swing.io.user.LoginUserInput;
@@ -16,33 +17,28 @@ import java.nio.charset.StandardCharsets;
 
 @Log
 public class AuthCaller {
-    private final Socket clientSocket;
-    private final BufferedReader input;
-    private final BufferedWriter output;
     private final ObjectMapper mapper;
+    private final SocketConnection socketConnection;
 
-    public AuthCaller(Socket clientSocket) throws IOException {
-        this.clientSocket = clientSocket;
-        this.input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
-        this.output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
+    public AuthCaller(SocketConnection socketConnection) {
         this.mapper = new ObjectMapper();
+        this.socketConnection = socketConnection;
     }
 
     public Result<Output<LoginUserOutput>> login(LoginUserInput request) {
-        try {
-            // Prepare login request
+        try (Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8))) {
             Input<LoginUserInput> req = Input.<LoginUserInput>builder()
                     .command(Input.Command.LOGIN)
                     .body(request)
                     .build();
             // Serialize and send the request
             String jsonString = mapper.writeValueAsString(req);
-            this.output.write(jsonString);
-            this.output.newLine();
-            this.output.flush();
-
+            writer.write(jsonString);
+            writer.newLine();writer.flush();
             // Read server response
-            String responseJson = input.readLine();
+            String responseJson = reader.readLine();
             log.info("Server response: " + responseJson);
             Output<LoginUserOutput> output = mapper.readValue(responseJson,
                     new TypeReference<>() {});
@@ -52,21 +48,20 @@ public class AuthCaller {
         }
     }
 
-    public Result<Output<Void>> register(RegisterUserInput request) {
-        try {
-            // Prepare register request
+    public Result<Output<Void>> register(RegisterUserInput input) {
+        try (Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8))) {
             Input<RegisterUserInput> req = Input.<RegisterUserInput>builder()
                     .command(Input.Command.REGISTER)
-                    .body(request)
+                    .body(input)
                     .build();
-            // Serialize and send the request
             String jsonString = mapper.writeValueAsString(req);
-            this.output.write(jsonString);
-            this.output.newLine();
-            this.output.flush();
+            writer.write(jsonString);
+            writer.newLine();
+            writer.flush();
 
-            // Read server response
-            String responseJson = input.readLine();
+            String responseJson = reader.readLine();
             log.info("Server response: " + responseJson);
             Output<Void> output = mapper.readValue(responseJson,
                     new TypeReference<>() {});

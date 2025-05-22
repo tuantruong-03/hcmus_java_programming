@@ -37,42 +37,45 @@ public class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private final AuthHandler authHandler;
     private final ChatRoomHandler chatRoomHandler;
-    private final BufferedReader in;
-    private final BufferedWriter out;
+    private final BufferedReader reader;
+    private final BufferedWriter writer;
     private final EventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
 
 
-    public ClientHandler(String clientId, SocketManager socketManager, Socket clientSocket) throws IOException {
-        this.clientId = clientId;
+    public ClientHandler(SocketManager socketManager, Socket clientSocket) throws IOException {
+        this.clientId = String.format("%s:%s:%s", clientSocket.getInetAddress().getHostAddress(), clientSocket.getPort(), System.currentTimeMillis());
         this.socketManager = socketManager;
         this.clientSocket = clientSocket;
         this.authHandler = ApplicationContext.getInstance().getAuthHandler();
         this.chatRoomHandler = ApplicationContext.getInstance().getChatRoomHandler();
-        this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
-        this.out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
-        this.eventPublisher = new EventPublisher(out);
+        this.reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+        this.writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
+        this.eventPublisher = new EventPublisher(writer);
         this.objectMapper = new ObjectMapper();
     }
 
     public void run() {
         log.info("Processing: " + clientSocket);
+        if (clientSocket.isClosed()) {
+            socketManager.removeClient(clientId);
+            return;
+        }
         while (true) {
             try {
-                String jsonInput = in.readLine();
+                String jsonInput = reader.readLine();
+                if (jsonInput == null) {
+                    socketManager.removeClient(clientId);
+                    break;
+                }
                 log.info("Received JSON: " + jsonInput);
                 var response = handleJsonInput(jsonInput);
-                if (response.isFailure()) {
-                    log.warning("failed to handle request: " + response.getException().getMessage());
-                    continue;
-                }
-                this.write(response.getValue());
-            } catch (IOException e) {
+                if (response.isFailure()) log.warning("failed to handle request: " + response.getException().getMessage());
+                else this.write(response.getValue());
+            } catch (IOException  e) {
                 log.warning("Client disconnected or error: " + e.getMessage());
             }
-            if (clientSocket.isClosed()) {
-                break;
-            }
+
         }
     }
 
@@ -99,6 +102,10 @@ public class ClientHandler implements Runnable {
                     return handleCreateChatRoomCommand(ctx);
                 }
                 case SEND_MESSAGE -> {
+                    return Result.success(new Output<>());
+                }
+                case KEEP_CONNECTION_ALIVE -> {
+                    socketManager.keepAlive(this);
                     return Result.success(new Output<>());
                 }
                 default -> {
@@ -141,9 +148,9 @@ public class ClientHandler implements Runnable {
 
     private void write(Object data) throws IOException {
         String jsonResponse = objectMapper.writeValueAsString(data);
-        out.write(jsonResponse);
-        out.newLine();
-        out.flush();
+        writer.write(jsonResponse);
+        writer.newLine();
+        writer.flush();
     }
 
     private void emitEvent(Event event) {

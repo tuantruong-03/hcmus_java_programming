@@ -37,7 +37,7 @@ public class ChatRoomRepository {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(columnIndex++, chatRoom.getId());
             stmt.setString(columnIndex++, chatRoom.getName());
-            stmt.setString(columnIndex++, chatRoom.getAvatar());
+            stmt.setString(columnIndex++, chatRoom.getImage());
             stmt.setBoolean(columnIndex++, chatRoom.getIsGroup());
             stmt.setDate(columnIndex, new Date(new java.util.Date().getTime()));
             stmt.executeUpdate();
@@ -61,7 +61,7 @@ public class ChatRoomRepository {
                 ChatRoom chatRoom = ChatRoom.builder()
                         .id(rs.getString(COLUMN_ID))
                         .name(rs.getString(COLUMN_NAME))
-                        .avatar(rs.getString(COLUMN_AVATAR))
+                        .image(rs.getString(COLUMN_AVATAR))
                         .isGroup(rs.getBoolean(COLUMN_IS_GROUP))
                         .createdAt(rs.getDate(COLUMN_CREATED_AT))
                         .updatedAt(rs.getDate(COLUMN_UPDATED_AT))
@@ -87,7 +87,7 @@ public class ChatRoomRepository {
                 ChatRoom chatRoom = ChatRoom.builder()
                         .id(rs.getString(COLUMN_ID))
                         .name(rs.getString(COLUMN_NAME))
-                        .avatar(rs.getString(COLUMN_AVATAR))
+                        .image(rs.getString(COLUMN_AVATAR))
                         .isGroup(rs.getBoolean(COLUMN_IS_GROUP))
                         .createdAt(rs.getDate(COLUMN_CREATED_AT))
                         .updatedAt(rs.getDate(COLUMN_UPDATED_AT))
