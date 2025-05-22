@@ -1,17 +1,23 @@
 package com.swing.views.chat;
 
 import com.swing.models.ChatRoom;
+import com.swing.models.Message;
+import lombok.extern.java.Log;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.util.List;
 
+@Log
 public abstract class ChatRoomPanel extends JPanel {
     protected JPanel chatArea;
     protected JTextField messageField;
     protected JButton sendButton;
     protected JButton sendFileButton;
     protected ChatRoom chatRoom;
+    protected List<Message> messages;
+    protected Message newMessage;
 
     protected ChatRoomPanel(String chatId) {
         setLayout(new BorderLayout());
@@ -42,6 +48,7 @@ public abstract class ChatRoomPanel extends JPanel {
         // Add listeners
         sendButton.addActionListener(e -> sendMessage());
         sendFileButton.addActionListener(e -> sendFile());
+
 
         chatRoom = ChatRoom.builder()
                 .id(chatId)

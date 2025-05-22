@@ -13,10 +13,12 @@ import java.util.List;
 public class Event {
     private Type type;
     private Object payload;
+
     public Event(Type type, Object payload) {
         this.type = type;
         this.payload = payload;
     }
+
     public enum Type {
         LOGIN,
         LOGOUT,
@@ -27,9 +29,12 @@ public class Event {
     public static class LoginPayload {
         private final String clientId;
         private final String userId;
-        public LoginPayload(String clientId, String userId) {
+        private final String username;
+
+        public LoginPayload(String clientId, String userId, String username) {
             this.clientId = clientId;
             this.userId = userId;
+            this.username = username;
         }
     }
 
@@ -53,6 +58,7 @@ public class Event {
         public static class Content {
             private String value;
             private Type type;
+
             public enum Type {
                 FILE, STRING
             }

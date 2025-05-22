@@ -131,7 +131,8 @@ public class ClientHandler implements Runnable {
             Optional<User> user = TokenUtils.getUser(token);
             if (user.isPresent()) {
                 this.userId = user.get().getId();
-                Event.LoginPayload loginPayload = new Event.LoginPayload(clientId, userId);
+                String username = user.get().getUsername();
+                Event.LoginPayload loginPayload = new Event.LoginPayload(clientId, userId, username);
                 Event event = new Event(Event.Type.LOGIN, loginPayload);
                 emitEvent(event);
             }

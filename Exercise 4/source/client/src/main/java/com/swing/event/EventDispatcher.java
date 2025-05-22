@@ -5,33 +5,45 @@ import com.swing.events.Event;
 import lombok.extern.java.Log;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Log
 public class EventDispatcher {
 
     private final BufferedReader reader;
     private final ObjectMapper mapper;
-    private final List<EventObserver> observers = new ArrayList<>();
+    private final Map<String,EventObserver> observers = new HashMap<>();
 
-    public EventDispatcher(Reader reader, EventObserver ...eventObservers) {
+    public EventDispatcher(Reader reader) {
         this.reader = new BufferedReader(reader);
-        this.observers.addAll(List.of(eventObservers));
         this.mapper = new ObjectMapper();
     }
 
     public void addObserver(EventObserver observer) {
-        observers.add(observer);
+        observers.put(observer.getName(), observer);
     }
 
-    public void removeObserver(EventObserver observer) {
-        observers.remove(observer);
+    public void removeObserver(String name) {
+        observers.remove(name);
+    }
+
+    public EventObserver getObserver(String name) {
+        return observers.get(name);
     }
 
     private void notify(Event event) {
-        for (EventObserver observer : observers) {
-            observer.onEvent(event);
+        Event.Type type = event.getType();
+        for (EventObserver observer : observers.values()) {
+            switch (type) {
+                case Event.Type.SEND_MESSAGE:
+                    if (observer instanceof MessageObserver messageObserver) {
+                        messageObserver.onEvent(event);
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
