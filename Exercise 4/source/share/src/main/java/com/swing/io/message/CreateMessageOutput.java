@@ -1,16 +1,13 @@
-package com.swing.models;
+package com.swing.io.message;
 
 import lombok.Builder;
 import lombok.Getter;
-
 import java.util.Date;
 
 @Builder
 @Getter
-public class ChatRoom {
-    private String id;
-    private String name;
-    private Boolean isGroup;
+public class CreateMessageOutput {
+    private String chatRoomId;
     private Date createdAt;
     private Date updatedAt;
 }

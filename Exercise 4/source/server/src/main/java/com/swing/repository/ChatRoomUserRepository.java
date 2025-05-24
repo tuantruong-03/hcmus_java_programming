@@ -144,7 +144,7 @@ public class ChatRoomUserRepository {
             statement.addOperator(new Operator.Eq(COLUMN_CHATROOM_ID, query.getChatRoomId()));
         }
         if (!StringUtils.isBlank(query.getUserId())) {
-            statement.addOperator(new Operator.Eq(COLUMN_USER_ID, query.getInUserIds()));
+            statement.addOperator(new Operator.Eq(COLUMN_USER_ID, query.getUserId()));
         }
         if (query.getInChatRoomIds() != null && !query.getInChatRoomIds().isEmpty()) {
             statement.addOperator(new Operator.In(COLUMN_CHATROOM_ID, query.getInChatRoomIds()));

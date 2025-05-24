@@ -1,5 +1,6 @@
 package com.swing.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swing.database.Database;
 import com.swing.models.Message;
@@ -26,7 +27,6 @@ public class MessageRepository {
     private static final String COLUMN_CHAT_ROOM_ID = "chat_room_id";
     private static final String COLUMN_CONTENT = "content";
     private static final String COLUMN_SENDER_ID = "sender_id";
-    private static final String COLUMN_SENDER_AVATAR = "sender_avatar";
     private static final String COLUMN_CREATED_AT = "created_at";
     private static final String COLUMN_UPDATED_AT = "updated_at";
 
@@ -35,7 +35,7 @@ public class MessageRepository {
     }
 
     public Result<Void> createOne(Message message) {
-        String sql = "INSERT INTO " + TABLE_NAME + " (id, chat_room_id, content, sender_id, sender_avatar, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO " + TABLE_NAME + " (id, chat_room_id, content, sender_id, created_at) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -45,7 +45,6 @@ public class MessageRepository {
             String contentJson = objectMapper.writeValueAsString(message.getContent());
             stmt.setString(columnIndex++, contentJson);
             stmt.setString(columnIndex++, message.getSenderId());
-            stmt.setString(columnIndex++, message.getSenderAvatar());
             stmt.setDate(columnIndex, new Date(new java.util.Date().getTime()));
             stmt.executeUpdate();
             log.info("Message created successfully: " + message.getId());
@@ -67,7 +66,11 @@ public class MessageRepository {
              PreparedStatement stmt = statementResult.getValue().prepareGetQuery(conn);
              ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
-                return Result.success(mapRow(rs));
+                var result = mapRow(rs);
+                if (result.isFailure()) {
+                    return Result.failure(result.getException());
+                }
+                return Result.success(result.getValue());
             }
             return Result.success(null);
         } catch (Exception e) {
@@ -124,7 +127,11 @@ public class MessageRepository {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                messages.add(mapRow(rs));
+                var result = mapRow(rs);
+                if (result.isFailure()) {
+                    return Result.failure(result.getException());
+                }
+                messages.add(result.getValue());
             }
             return Result.success(messages);
         } catch (Exception e) {
@@ -157,16 +164,20 @@ public class MessageRepository {
         }
     }
 
-    private Message mapRow(ResultSet rs) throws Exception {
-        return Message.builder()
-                .id(rs.getString(COLUMN_ID))
-                .chatRoomId(rs.getString(COLUMN_CHAT_ROOM_ID))
-                .senderId(rs.getString(COLUMN_SENDER_ID))
-                .senderAvatar(rs.getString(COLUMN_SENDER_AVATAR))
-                .createdAt(rs.getTimestamp(COLUMN_CREATED_AT))
-                .updatedAt(rs.getTimestamp(COLUMN_UPDATED_AT))
-                .content(objectMapper.readValue(rs.getString(COLUMN_CONTENT), Message.Content.class))
-                .build();
+    private Result<Message> mapRow(ResultSet rs) {
+        try {
+            Message message = Message.builder()
+                   .id(rs.getString(COLUMN_ID))
+                   .chatRoomId(rs.getString(COLUMN_CHAT_ROOM_ID))
+                   .senderId(rs.getString(COLUMN_SENDER_ID))
+                   .createdAt(rs.getTimestamp(COLUMN_CREATED_AT))
+                   .updatedAt(rs.getTimestamp(COLUMN_UPDATED_AT))
+                   .content(objectMapper.readValue(rs.getString(COLUMN_CONTENT), Message.Content.class))
+                   .build();
+            return Result.success(message);
+        } catch (SQLException | JsonProcessingException e) {
+            return Result.failure(e);
+        }
     }
 
     private Result<Statement> buildStatement(Query query) {

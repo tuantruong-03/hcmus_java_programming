@@ -23,7 +23,6 @@ public class ChatRoomRepository {
     private static final String TABLE_NAME = "chat_rooms";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_NAME = "name";
-    private static final String COLUMN_AVATAR = "avatar";
     private static final String COLUMN_IS_GROUP= "is_group";
     private static final String COLUMN_CREATED_AT = "created_at";
     private static final String COLUMN_UPDATED_AT = "updated_at";
@@ -31,13 +30,12 @@ public class ChatRoomRepository {
         this.db = db;
     }
     public Result<Void> createOne(ChatRoom chatRoom) {
-        String sql = "INSERT INTO " + TABLE_NAME +" (id, name, avatar, is_group, created_at) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO " + TABLE_NAME +" (id, name, is_group, created_at) VALUES (?, ?, ?, ?)";
         int columnIndex = 1;
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(columnIndex++, chatRoom.getId());
             stmt.setString(columnIndex++, chatRoom.getName());
-            stmt.setString(columnIndex++, chatRoom.getImage());
             stmt.setBoolean(columnIndex++, chatRoom.getIsGroup());
             stmt.setDate(columnIndex, new Date(new java.util.Date().getTime()));
             stmt.executeUpdate();
@@ -61,7 +59,6 @@ public class ChatRoomRepository {
                 ChatRoom chatRoom = ChatRoom.builder()
                         .id(rs.getString(COLUMN_ID))
                         .name(rs.getString(COLUMN_NAME))
-                        .image(rs.getString(COLUMN_AVATAR))
                         .isGroup(rs.getBoolean(COLUMN_IS_GROUP))
                         .createdAt(rs.getDate(COLUMN_CREATED_AT))
                         .updatedAt(rs.getDate(COLUMN_UPDATED_AT))
@@ -87,7 +84,6 @@ public class ChatRoomRepository {
                 ChatRoom chatRoom = ChatRoom.builder()
                         .id(rs.getString(COLUMN_ID))
                         .name(rs.getString(COLUMN_NAME))
-                        .image(rs.getString(COLUMN_AVATAR))
                         .isGroup(rs.getBoolean(COLUMN_IS_GROUP))
                         .createdAt(rs.getDate(COLUMN_CREATED_AT))
                         .updatedAt(rs.getDate(COLUMN_UPDATED_AT))
@@ -130,8 +126,8 @@ public class ChatRoomRepository {
 
     private Result<Statement> buildStatement(Query query) {
         var statement = new Statement(TABLE_NAME);
-        if (!StringUtils.isBlank(query.getId())) {
-            statement.addOperator(new Operator.Eq(COLUMN_ID, query.getId()));
+        if (!StringUtils.isBlank(query.getChatRoomId())) {
+            statement.addOperator(new Operator.Eq(COLUMN_ID, query.getChatRoomId()));
         }
         if (!StringUtils.isBlank(query.getName())) {
             statement.addOperator(new Operator.Eq(COLUMN_NAME, query.getName()));
@@ -139,8 +135,8 @@ public class ChatRoomRepository {
         if (query.isGroup != null) {
             statement.addOperator(new Operator.Eq(COLUMN_IS_GROUP, query.isGroup));
         }
-        if (query.getInIds() != null && !query.getInIds().isEmpty()) {
-            statement.addOperator(new Operator.In(COLUMN_ID, query.getInIds()));
+        if (query.getInChatRoomIds() != null && !query.getInChatRoomIds().isEmpty()) {
+            statement.addOperator(new Operator.In(COLUMN_ID, query.getInChatRoomIds()));
         }
         if (query.page < 0) {
             statement.page(0);
@@ -154,9 +150,9 @@ public class ChatRoomRepository {
     @Builder
     @Getter
     public static class Query {
-        private String id;
+        private String chatRoomId;
         private String name;
-        private List<String> inIds;
+        private List<String> inChatRoomIds;
         private Boolean isGroup;
         private int page;
         @Setter

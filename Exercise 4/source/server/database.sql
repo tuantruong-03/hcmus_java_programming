@@ -36,7 +36,6 @@ CREATE TABLE IF NOT EXISTS messages (
   chat_room_id CHAR(36) NOT NULL,
   sender_id CHAR(36),
   sender_name VARCHAR(255),
-  sender_avatar VARCHAR(255),
   content JSON NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

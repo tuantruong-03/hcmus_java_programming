@@ -1,5 +1,4 @@
-package com.swing.models;
-
+package com.swing.io.message;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,11 +9,11 @@ import java.util.Date;
 
 @Builder
 @Getter
-public class Message {
-    private String id;
+public class CreateMessageInput {
     private String chatRoomId;
     private Content content;
     private String senderId;
+    private String receiverId;
     private Date createdAt;
     private Date updatedAt;
 

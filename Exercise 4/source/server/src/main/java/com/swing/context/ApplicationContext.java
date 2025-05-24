@@ -4,6 +4,8 @@ package com.swing.context;
 import com.swing.database.Database;
 import com.swing.handlers.AuthHandler;
 import com.swing.handlers.ChatRoomHandler;
+import com.swing.handlers.MessageHandler;
+import com.swing.handlers.UserHandler;
 import com.swing.publishers.EventPublisher;
 import com.swing.repository.ChatRoomRepository;
 import com.swing.repository.ChatRoomUserRepository;
@@ -27,6 +29,8 @@ public class ApplicationContext {
     private MessageRepository messageRepository;
     private AuthHandler authHandler;
     private ChatRoomHandler chatRoomHandler;
+    private UserHandler userHandler;
+    private MessageHandler messageHandler;
 
     private EventPublisher eventPublisher;
 
@@ -61,6 +65,8 @@ public class ApplicationContext {
             context.messageRepository = new MessageRepository(db);
             context.authHandler = new AuthHandler(context.userRepository);
             context.chatRoomHandler = new ChatRoomHandler(context.chatRoomRepository, context.chatRoomUserRepository);
+            context.userHandler = new UserHandler(context.userRepository);
+            context.messageHandler = new MessageHandler(context.messageRepository, context.chatRoomRepository, context.chatRoomUserRepository);
             log.info("Application context initialized successfully.");
         } catch (Exception e) {
             log.warning(e.getMessage());
