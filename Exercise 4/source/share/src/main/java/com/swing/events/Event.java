@@ -41,15 +41,13 @@ public class Event {
     @Getter
     @Builder
     public static class SendMessagePayload {
-        private String id;
+        private String messageId;
         private String chatRoomId;
         private Content content;
         private String senderId;
         private String senderName;
-        private String senderAvatar;
         private List<String> receiverIds;
         private Date createdAt;
-        private Date updatedAt;
 
         @Builder
         @Getter
@@ -60,7 +58,7 @@ public class Event {
             private Type type;
 
             public enum Type {
-                FILE, STRING
+                FILE, TEXT
             }
         }
     }

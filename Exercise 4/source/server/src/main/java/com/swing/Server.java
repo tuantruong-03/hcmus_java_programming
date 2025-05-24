@@ -1,7 +1,7 @@
 package com.swing;
 
 import com.swing.context.ApplicationContext;
-import com.swing.context.SocketManager;
+import com.swing.socket.SocketManager;
 
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or

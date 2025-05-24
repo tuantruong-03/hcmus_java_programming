@@ -17,6 +17,7 @@ public class InputContext<I, O> {
     private Output<O> output;
     private boolean isAuthenticated;
     private boolean isAborted;
+    private Status status;
 
     public InputContext(Input<I> input) {
         this.input = input;
@@ -43,5 +44,11 @@ public class InputContext<I, O> {
     public static class Principal {
         private String username;
         private String userId;
+    }
+
+    public enum Status {
+        OK,
+        INTERNAL_ERROR,
+        BAD_REQUEST
     }
 }

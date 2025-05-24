@@ -17,12 +17,16 @@ public class Input<T> {
     private T body;
 
     public enum Command {
+        REGISTER,
         LOGIN,
         LOGOUT,
-        KEEP_CONNECTION_ALIVE,
-        REGISTER,
-        SEND_MESSAGE,
-        CREATE_CHATROOM,
         DISCONNECT,
+        CREATE_CHATROOM,
+        GET_MY_PROFILE,
+        GET_MY_CHAT_ROOMS,
+        GET_CHAT_ROOM,
+        GET_MESSAGES,
+        KEEP_CONNECTION_ALIVE,
+        SEND_MESSAGE,
     }
 }

@@ -1,4 +1,4 @@
-package com.swing.handlers;
+package com.swing.controllers;
 
 import com.swing.context.InputContext;
 import com.swing.io.Input;
@@ -54,6 +54,7 @@ public class AuthHandler {
             inputContext.setOutput(Output.<RegisterUserOutput>builder().error(error).build());
             return;
         }
+        inputContext.setStatus(InputContext.Status.OK);
         inputContext.setOutput(Output.<RegisterUserOutput>builder()
                         .body(RegisterUserOutput.builder().build())
                 .build());
@@ -77,12 +78,13 @@ public class AuthHandler {
             return;
         }
         String token = TokenUtils.register(user.getValue());
+        inputContext.setStatus(InputContext.Status.OK);
         inputContext.setOutput(Output.<LoginUserOutput>builder()
                 .body(LoginUserOutput.builder().token(token).build())
                 .build());
     }
 
-    public void validate(InputContext<?,?> inputContext) {
+    public void authenticate(InputContext<?,?> inputContext) {
         String token = inputContext.getToken();
         Optional<User> user = TokenUtils.getUser(token);
         if (user.isEmpty()) {
@@ -91,6 +93,7 @@ public class AuthHandler {
             return;
         }
         inputContext.setAuthenticated(true);
+        inputContext.setStatus(InputContext.Status.OK);
         InputContext.Principal principal = InputContext.Principal.builder()
                 .username(user.get().getUsername())
                 .build();

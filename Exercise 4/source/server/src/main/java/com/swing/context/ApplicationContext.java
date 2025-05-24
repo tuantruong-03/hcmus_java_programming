@@ -2,10 +2,10 @@ package com.swing.context;
 
 
 import com.swing.database.Database;
-import com.swing.handlers.AuthHandler;
-import com.swing.handlers.ChatRoomHandler;
-import com.swing.handlers.MessageHandler;
-import com.swing.handlers.UserHandler;
+import com.swing.controllers.AuthHandler;
+import com.swing.controllers.ChatRoomHandler;
+import com.swing.controllers.MessageHandler;
+import com.swing.controllers.UserHandler;
 import com.swing.publishers.EventPublisher;
 import com.swing.repository.ChatRoomRepository;
 import com.swing.repository.ChatRoomUserRepository;

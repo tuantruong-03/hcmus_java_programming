@@ -1,4 +1,4 @@
-package com.swing.handlers;
+package com.swing.controllers;
 
 import com.swing.context.InputContext;
 import com.swing.io.Input;
@@ -118,6 +118,7 @@ public class ChatRoomHandler {
         Output<GetChatRoomsOutput> output = Output.<GetChatRoomsOutput>builder()
                 .body(getChatRoomsOutput)
                 .build();
+        context.setStatus(InputContext.Status.OK);
         context.setOutput(output);
     }
 
@@ -156,6 +157,7 @@ public class ChatRoomHandler {
             context.setOutput(Output.<CreateChatRoomOutput>builder().error(error).build());
             return;
         }
+        context.setStatus(InputContext.Status.OK);
         context.setOutput(Output.<CreateChatRoomOutput>builder()
                 .body(CreateChatRoomOutput.builder().chatRoomId(chatRoomId).build())
                 .build());

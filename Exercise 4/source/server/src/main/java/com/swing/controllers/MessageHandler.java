@@ -1,12 +1,12 @@
-package com.swing.handlers;
+package com.swing.controllers;
 
 import com.swing.context.InputContext;
 import com.swing.io.Input;
 import com.swing.io.Output;
 import com.swing.io.chatroom.CreateChatRoomInput;
 import com.swing.io.chatroom.CreateChatRoomOutput;
-import com.swing.io.message.CreateMessageInput;
-import com.swing.io.message.CreateMessageOutput;
+import com.swing.io.message.*;
+import com.swing.mapper.MessageContentMapper;
 import com.swing.models.ChatRoom;
 import com.swing.models.ChatRoomUser;
 import com.swing.models.Message;
@@ -33,12 +33,46 @@ public class MessageHandler {
         this.chatRoomUserRepository = chatRoomUserRepository;
     }
 
+    public void findMany(InputContext<GetMessagesInput, GetMessagesOutput> context) {
+        Input<GetMessagesInput> input = context.getInput();
+        GetMessagesInput body = input.getBody();
+        var result = messageRepository.findMany(MessageRepository.Query.builder()
+                        .chatRoomId(body.getChatRoomId())
+                .page(body.getPage())
+                .limit(body.getLimit())
+                .build());
+        if (result.isFailure()) {
+            log.warning("MessageHandler::findMany: " + result.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setOutput(Output.<GetMessagesOutput>builder().error(error).build());
+            return;
+        }
+        List<Message> messages = result.getValue();
+        List<GetMessagesOutput.Item> items = messages.stream()
+                .map(message -> GetMessagesOutput.Item.builder()
+                        .messageId(message.getId())
+                        .chatRoomId(message.getChatRoomId())
+                        .senderId(message.getSenderId())
+                        .content(MessageContentMapper.fromModelToIO(message.getContent()))
+                        .createdAt(message.getCreatedAt())
+                        .updatedAt(message.getUpdatedAt())
+                        .build())
+                .toList();
+        GetMessagesOutput outputBody = GetMessagesOutput.builder()
+                .items(items)
+                .build();
+        context.setStatus(InputContext.Status.OK);
+        context.setOutput(Output.<GetMessagesOutput>builder()
+                .body(outputBody)
+                .build());
+    }
+
     public void createOne(InputContext<CreateMessageInput, CreateMessageOutput> context) {
         Input<CreateMessageInput> input = context.getInput();
         CreateMessageInput body = input.getBody();
         String chatRoomId = body.getChatRoomId();
         if (chatRoomId == null) {
-            var result1 = CreateChatRoomInput.builder().otherUserIds(body.getReceiverId()).build();
+            var result1 = CreateChatRoomInput.builder().otherUserIds(body.getReceiverIds().toArray(new String[0])).build();
             if (result1.isFailure()) {
                 log.warning("failed to create message: " + result1.getException().getMessage());
                 Output.Error error = Output.Error.interalServerError();
@@ -54,19 +88,8 @@ public class MessageHandler {
             }
             chatRoomId = result2.getValue().getChatRoomId();
         }
-        CreateMessageInput.Content content = body.getContent();
-        Message.Content.Type type = null;
-        if (content.getType() != null) {
-            if (content.getType() == CreateMessageInput.Content.Type.TEXT) {
-                type = Message.Content.Type.TEXT;
-            } else if (content.getType() == CreateMessageInput.Content.Type.FILE) {
-                type = Message.Content.Type.FILE;
-            }
-        }
-        Message.Content messageContent = Message.Content.builder()
-                .value(content.getValue())
-                .type(type)
-                .build();
+        Content content = body.getContent();
+        Message.Content messageContent = MessageContentMapper.fromIOToModel(content);
         Message message = Message.builder()
                 .id(UUID.randomUUID().toString())
                 .chatRoomId(chatRoomId)
@@ -80,9 +103,12 @@ public class MessageHandler {
             context.setOutput(Output.<CreateMessageOutput>builder().error(error).build());
             return;
         }
+        String messageId = message.getId();
         CreateMessageOutput createMessageOutput = CreateMessageOutput.builder()
+                .messageId(messageId)
                 .chatRoomId(chatRoomId)
                 .build();
+        context.setStatus(InputContext.Status.OK);
         context.setOutput(Output.<CreateMessageOutput>builder()
                 .body(createMessageOutput)
                 .build());

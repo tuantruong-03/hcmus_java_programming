@@ -1,4 +1,4 @@
-package com.swing.handlers;
+package com.swing.controllers;
 
 import com.swing.context.InputContext;
 import com.swing.io.Output;

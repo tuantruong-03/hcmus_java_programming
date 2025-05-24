@@ -13,9 +13,14 @@ public class EventPublisher {
         this.objectMapper = new ObjectMapper();
     }
 
-    public void publish(Object event) throws IOException {
-        String jsonResponse = objectMapper.writeValueAsString(event);
-        writer.write(jsonResponse);
-        writer.flush();
+    public Exception publish(Object event) {
+        try {
+            String jsonResponse = objectMapper.writeValueAsString(event);
+            writer.write(jsonResponse);
+            writer.flush();
+        } catch (IOException e) {
+            return e;
+        }
+        return null;
     }
 }

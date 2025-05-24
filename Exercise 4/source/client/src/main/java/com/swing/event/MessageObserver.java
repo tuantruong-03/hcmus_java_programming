@@ -23,12 +23,11 @@ public class MessageObserver implements EventObserver {
     public void onEvent(Event event) {
         Event.SendMessagePayload payload = (Event.SendMessagePayload) event.getPayload();
         this.message = Message.builder()
-                .id(payload.getId())
+                .id(payload.getMessageId())
                 .chatRoomId(payload.getChatRoomId())
+                .senderId(payload.getSenderId())
                 .senderName(payload.getSenderName())
-                .senderAvatar(payload.getSenderAvatar())
                 .createdAt(payload.getCreatedAt())
-                .updatedAt(payload.getUpdatedAt())
                 .build();
         for (Consumer<Message> consumer : consumers) {
             consumer.accept(message);
