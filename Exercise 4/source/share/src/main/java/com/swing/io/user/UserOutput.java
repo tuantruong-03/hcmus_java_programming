@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserOutput {
     private String id;
+    private String name;
     private String username;
 }

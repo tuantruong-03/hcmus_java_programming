@@ -22,7 +22,7 @@ public class ChatRoomUserRepository {
 
     private static final String TABLE_NAME = "chatroom_user";
     private static final String COLUMN_USER_ID = "user_id";
-    private static final String COLUMN_CHATROOM_ID = "chatroom_id";
+    private static final String COLUMN_CHATROOM_ID = "chat_room_id";
 
     public ChatRoomUserRepository(Database db) {
         this.db = db;
@@ -47,7 +47,7 @@ public class ChatRoomUserRepository {
         if (chatRoomUsers == null || chatRoomUsers.isEmpty()) {
             return Result.success(null); // No-op for empty input
         }
-        String sql = "INSERT INTO chatroom_user (chatroom_id, user_id) VALUES (?, ?)";
+        String sql = "INSERT INTO chatroom_user (chat_room_id, user_id) VALUES (?, ?)";
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);

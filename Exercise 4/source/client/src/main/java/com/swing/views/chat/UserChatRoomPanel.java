@@ -1,10 +1,12 @@
 package com.swing.views.chat;
 
 
+import com.swing.models.ChatRoom;
+
 public class UserChatRoomPanel extends ChatRoomPanel {
 
-    public UserChatRoomPanel(String chatId) {
-        super(chatId);
+    public UserChatRoomPanel(ChatRoom chatRoom) {
+        super(chatRoom);
     }
 
     // Implement sending message for user-to-user chat

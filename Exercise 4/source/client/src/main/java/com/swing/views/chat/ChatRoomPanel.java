@@ -1,7 +1,13 @@
 package com.swing.views.chat;
 
+import com.swing.callers.ChatRoomCaller;
+import com.swing.context.ApplicationContext;
+import com.swing.context.AuthContext;
+import com.swing.io.Output;
+import com.swing.io.chatroom.*;
 import com.swing.models.ChatRoom;
 import com.swing.models.Message;
+import lombok.Getter;
 import lombok.extern.java.Log;
 
 import javax.swing.*;
@@ -15,11 +21,14 @@ public abstract class ChatRoomPanel extends JPanel {
     protected JTextField messageField;
     protected JButton sendButton;
     protected JButton sendFileButton;
-    protected ChatRoom chatRoom;
+    @Getter
+    protected transient ChatRoom chatRoom;
     protected List<Message> messages;
     protected Message newMessage;
 
-    protected ChatRoomPanel(String chatId) {
+    protected final transient ChatRoomCaller chatRoomCaller;
+
+    protected ChatRoomPanel(ChatRoom chatRoom) {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createTitledBorder("Chat Title"));
         chatArea = new JPanel();
@@ -49,11 +58,48 @@ public abstract class ChatRoomPanel extends JPanel {
         sendButton.addActionListener(e -> sendMessage());
         sendFileButton.addActionListener(e -> sendFile());
 
+        chatRoomCaller = ApplicationContext.getInstance().getChatRoomCaller();
+        this.chatRoom = chatRoom;
+        renderWithData();
+    }
 
-        chatRoom = ChatRoom.builder()
-                .id(chatId)
-                .name(chatId)
+    public void renderWithData() {
+        String chatRoomId = chatRoom.getId();
+        if (chatRoom.isNew()) {
+            List<String> userIds = chatRoom.getUserIds();
+            List<String> otherUserIds = userIds.stream().
+                    filter(userId -> !userId.equals(AuthContext.INSTANCE.getPrincipal().getUserId()) ).toList();
+            var inputResult = CreateChatRoomInput.builder()
+                    .otherUserIds(otherUserIds.stream().toList().toArray(new String[0]))
+                    .isGroup(false)
+                    .build();
+            if (inputResult.isFailure()) {
+                log.warning("ChatRoomPanel::renderWithData: " + inputResult.getException().getMessage());
+                return;
+            }
+            var result = chatRoomCaller.createOne(inputResult.getValue());
+            if (result.isFailure()) {
+                log.warning("ChatRoomPanel::renderWithData: " + result.getException().getMessage());
+                return;
+            }
+            Output<CreateChatRoomOutput> output = result.getValue();
+            if (output.getError() != null) {
+                log.warning("ChatRoomPanel::renderWithData: " + result.getException().getMessage());
+                return;
+            }
+            chatRoomId = output.getBody().getChatRoomId();
+        }
+        // Fetch full data of chatRoom
+        GetChatRoomInput input = GetChatRoomInput.builder()
+                .chatRoomId(chatRoomId)
                 .build();
+        var result = chatRoomCaller.getChatRoom(input);
+        if (result.isFailure()) {
+            log.warning("MainChatPanels::fetchChatRooms: " + result.getException().getMessage());
+            return;
+        }
+        GetChatRoomOutput output = result.getValue().getBody();
+        chatRoom.setUserIds(output.getMembers().values().stream().toList());
     }
 
     public void showUI() {
@@ -63,10 +109,10 @@ public abstract class ChatRoomPanel extends JPanel {
         setVisible(false);
     }
 
-    public String getChatName() {
+    public String getChatRoomName() {
         return chatRoom.getName();
     }
-    public String getChatId() {
+    public String getChatRoomId() {
         return chatRoom.getId();
     }
 

@@ -1,4 +1,4 @@
-package com.swing.io.message;
+package com.swing.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetMessagesInput {
-    private String chatRoomId;
-    private int page;
-    private int limit;
+public class User {
+    private String id;
+    private String name;
+    private String username;
 }

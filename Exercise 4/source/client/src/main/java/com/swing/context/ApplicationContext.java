@@ -2,6 +2,7 @@ package com.swing.context;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swing.callers.AuthCaller;
+import com.swing.callers.ChatRoomCaller;
 import com.swing.callers.UserCaller;
 import com.swing.event.EventDispatcher;
 import com.swing.io.Input;
@@ -23,6 +24,8 @@ public class ApplicationContext {
     private AuthCaller authCaller;
     @Getter
     private UserCaller userCaller;
+    @Getter
+    private ChatRoomCaller chatRoomCaller;
 
     @Getter
     private EventDispatcher eventDispatcher;
@@ -38,11 +41,12 @@ public class ApplicationContext {
         ApplicationContext context = new ApplicationContext();
         context.socketConnection = socketConnection;
         context.objectMapper = new ObjectMapper();
-        try (Socket socket = new Socket();){
+        try (Socket socket = new Socket()){
             // Try to ping that server
             socket.connect(new InetSocketAddress(socketConnection.getHost(), socketConnection.getPort()), 500);
             context.authCaller = new AuthCaller(socketConnection, context.objectMapper);
             context.userCaller = new UserCaller(socketConnection, context.objectMapper);
+            context.chatRoomCaller = new ChatRoomCaller(socketConnection, context.objectMapper);
             Holder.instance = context;
             return null;
         } catch (Exception e) {

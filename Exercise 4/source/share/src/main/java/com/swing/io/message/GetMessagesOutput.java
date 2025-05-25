@@ -1,13 +1,17 @@
 package com.swing.io.message;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
 
-@Builder
 @Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GetMessagesOutput {
     private List<Item> items;
     private int total;
@@ -15,6 +19,8 @@ public class GetMessagesOutput {
 
     @Getter
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Item {
         private String messageId;
         private String chatRoomId;

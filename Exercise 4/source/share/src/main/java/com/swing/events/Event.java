@@ -21,19 +21,22 @@ public class Event {
     }
 
     public enum Type {
-        LOGIN,
-        LOGOUT,
+        USER_LOGIN,
+        USER_LOGOUT,
         SEND_MESSAGE,
     }
 
     @Getter
+    @NoArgsConstructor
     public static class LoginPayload {
-        private final String clientId;
-        private final String userId;
-        private final String username;
+        private String clientId;
+        private String userId;
+        private String name;
+        private String username;
 
-        public LoginPayload(String clientId, String userId, String username) {
+        public LoginPayload(String clientId, String userId, String name, String username) {
             this.clientId = clientId;
+            this.name = name;
             this.userId = userId;
             this.username = username;
         }
@@ -41,6 +44,8 @@ public class Event {
 
     @Getter
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class SendMessagePayload {
         private String messageId;
         private String chatRoomId;

@@ -6,20 +6,86 @@ import com.swing.io.Output;
 import com.swing.io.chatroom.*;
 import com.swing.models.ChatRoom;
 import com.swing.models.ChatRoomUser;
+import com.swing.models.User;
 import com.swing.repository.ChatRoomRepository;
 import com.swing.repository.ChatRoomUserRepository;
+import com.swing.repository.UserRepository;
 import lombok.extern.java.Log;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Log
 public class ChatRoomHandler {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomUserRepository chatRoomUserRepository;
+    private final UserRepository userRepository;
 
-    public ChatRoomHandler(ChatRoomRepository chatRoomRepository, ChatRoomUserRepository chatRoomUserRepository) {
+    public ChatRoomHandler(ChatRoomRepository chatRoomRepository, ChatRoomUserRepository chatRoomUserRepository, UserRepository userRepository) {
         this.chatRoomRepository = chatRoomRepository;
         this.chatRoomUserRepository = chatRoomUserRepository;
+        this.userRepository = userRepository;
+    }
+
+
+    public void createOne(InputContext<CreateChatRoomInput, CreateChatRoomOutput> context) {
+        Input<CreateChatRoomInput> input = context.getInput();
+        CreateChatRoomInput body = input.getBody();
+        InputContext.Principal principal = context.getPrincipal();
+
+        List<ChatRoomUser> chatRoomUsers = new ArrayList<>();
+        List<String> userIds = new ArrayList<>();
+        userIds.add(principal.getUserId());
+        userIds.addAll(body.getOtherUserIds());
+        String name = body.getName();
+        if (StringUtils.isBlank(body.getName())) {
+            var result = userRepository.findMany(UserRepository.Query.builder()
+                    .inUserIds(userIds)
+                    .build());
+            if (result.isFailure()) {
+                log.warning("failed to create chat room: " + result.getException().getMessage());
+                Output.Error error = Output.Error.interalServerError();
+                context.setOutput(Output.<CreateChatRoomOutput>builder().error(error).build());
+                return;
+            }
+            List<User> users = result.getValue();
+            name = users.stream()
+                    .map(User::getName)
+                    .collect(Collectors.joining(","));
+        }
+
+        String chatRoomId = UUID.randomUUID().toString();
+        ChatRoom chatRoom = ChatRoom.builder()
+                .id(chatRoomId)
+                .name(name)
+                .isGroup(body.isGroup())
+                .build();
+        var result1 = chatRoomRepository.createOne(chatRoom);
+        if (result1.isFailure()) {
+            log.warning("failed to create chat room: " + result1.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setOutput(Output.<CreateChatRoomOutput>builder().error(error).build());
+            return;
+        }
+        for (String userId : userIds) {
+            ChatRoomUser chatRoomUser = ChatRoomUser.builder()
+                    .chatRoomId(chatRoomId)
+                    .userId(userId)
+                    .build();
+            chatRoomUsers.add(chatRoomUser);
+        }
+        var result2 = chatRoomUserRepository.createMany(chatRoomUsers);
+        if (result2.isFailure()) {
+            log.warning("failed to create chat room: " + result2.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setOutput(Output.<CreateChatRoomOutput>builder().error(error).build());
+            return;
+        }
+        context.setStatus(InputContext.Status.OK);
+        context.setOutput(Output.<CreateChatRoomOutput>builder()
+                .body(CreateChatRoomOutput.builder().chatRoomId(chatRoomId).build())
+                .build());
     }
 
     public void findOne(InputContext<GetChatRoomInput, GetChatRoomOutput> context) {
@@ -46,7 +112,7 @@ public class ChatRoomHandler {
                 .chatRoomId(body.getChatRoomId())
                 .build());
         if (result2.isFailure()) {
-            log.warning("failed to findMyChatRooms: " + result2.getException().getMessage());
+            log.warning("failed to findChatRoom: " + result2.getException().getMessage());
             Output.Error error = Output.Error.interalServerError();
             context.setOutput(Output.<GetChatRoomOutput>builder().error(error).build());
             return;
@@ -62,12 +128,14 @@ public class ChatRoomHandler {
                 .id(chatRoom.getId())
                 .name(chatRoom.getName())
                 .members(members)
+                .isGroup(chatRoom.getIsGroup())
                 .createdAt(chatRoom.getCreatedAt())
                 .updatedAt(chatRoom.getUpdatedAt())
                 .build();
         Output<GetChatRoomOutput> output = Output.<GetChatRoomOutput>builder()
                 .body(getChatRoomsOutput)
                 .build();
+        context.setStatus(InputContext.Status.OK);
         context.setOutput(output);
     }
 
@@ -104,8 +172,8 @@ public class ChatRoomHandler {
         List<GetChatRoomsOutput.Item> items = chatRooms.stream()
                 .map((chatRoom -> GetChatRoomsOutput.Item
                         .builder()
-                        .id(chatRoom.getId())
-                        .name(chatRoom.getName())
+                        .chatRoomId(chatRoom.getId())
+                        .chatRoomName(chatRoom.getName())
                         .isGroup(chatRoom.getIsGroup())
                         .createdAt(chatRoom.getCreatedAt())
                         .updatedAt(chatRoom.getUpdatedAt())
@@ -122,44 +190,4 @@ public class ChatRoomHandler {
         context.setOutput(output);
     }
 
-    public void create(InputContext<CreateChatRoomInput, CreateChatRoomOutput> context) {
-        Input<CreateChatRoomInput> input = context.getInput();
-        CreateChatRoomInput body = input.getBody();
-        String chatRoomId = UUID.randomUUID().toString();
-        ChatRoom chatRoom = ChatRoom.builder()
-                .id(chatRoomId)
-                .name(body.getName())
-                .isGroup(body.isGroup())
-                .build();
-        var result1 = chatRoomRepository.createOne(chatRoom);
-        if (result1.isFailure()) {
-            log.warning("failed to create chat room: " + result1.getException().getMessage());
-            Output.Error error = Output.Error.interalServerError();
-            context.setOutput(Output.<CreateChatRoomOutput>builder().error(error).build());
-            return;
-        }
-        InputContext.Principal principal = context.getPrincipal();
-        List<ChatRoomUser> chatRoomUsers = new ArrayList<>();
-        List<String> userIds = new ArrayList<>();
-        userIds.add(principal.getUserId());
-        userIds.addAll(body.getOtherUserIds());
-        for (String userId : userIds) {
-            ChatRoomUser chatRoomUser = ChatRoomUser.builder()
-                    .chatRoomId(chatRoomId)
-                    .userId(userId)
-                    .build();
-            chatRoomUsers.add(chatRoomUser);
-        }
-        var result2 = chatRoomUserRepository.createMany(chatRoomUsers);
-        if (result2.isFailure()) {
-            log.warning("failed to create chat room: " + result2.getException().getMessage());
-            Output.Error error = Output.Error.interalServerError();
-            context.setOutput(Output.<CreateChatRoomOutput>builder().error(error).build());
-            return;
-        }
-        context.setStatus(InputContext.Status.OK);
-        context.setOutput(Output.<CreateChatRoomOutput>builder()
-                .body(CreateChatRoomOutput.builder().chatRoomId(chatRoomId).build())
-                .build());
-    }
 }

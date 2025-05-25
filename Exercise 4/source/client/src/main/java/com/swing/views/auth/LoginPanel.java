@@ -62,12 +62,12 @@ class LoginPanel extends JPanel {
             return;
         }
         errorLabel.setForeground(new Color(0, 128, 0));  // Success color (green)
-        Result<Output<LoginUserOutput>> registerResult = authCaller.login(buildRequestResult.getValue());
-        if (registerResult.isFailure()) {
-            log.warning("failed to login: " + registerResult.getException());
+        Result<Output<LoginUserOutput>> loginResult = authCaller.login(buildRequestResult.getValue());
+        if (loginResult.isFailure()) {
+            log.warning("failed to login: " + loginResult.getException());
             return;
         }
-        Output<LoginUserOutput> output = registerResult.getValue();
+        Output<LoginUserOutput> output = loginResult.getValue();
         if (output.getError() != null) {
             log.warning("failed to login: " + output.getError().getMessage());
             errorLabel.setText("Login failed, please try again" );
@@ -82,7 +82,7 @@ class LoginPanel extends JPanel {
             return;
         }
         UserOutput userOutput = result.getValue().getBody();
-        AuthContext.Principal principal = new AuthContext.Principal(userOutput.getId(), userOutput.getUsername());
+        AuthContext.Principal principal = new AuthContext.Principal(userOutput.getId(), userOutput.getName(), userOutput.getUsername());
         AuthContext.INSTANCE.setPrincipal(principal);
         Exception exception = ApplicationContext.getInstance().runEventDispatcher();
         if (exception != null) {

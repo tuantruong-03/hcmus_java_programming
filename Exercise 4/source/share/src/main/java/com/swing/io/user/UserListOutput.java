@@ -13,9 +13,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserListOutput {
-    List<Item> items;
-    int total;
-    int page;
+    private List<Item> items;
+    private  int total;
+    private  int page;
 
     @Builder
     @Getter

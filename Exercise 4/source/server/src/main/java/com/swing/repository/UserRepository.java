@@ -152,6 +152,9 @@ public class UserRepository {
             }
             statement.addOperator(new Operator.Eq(COLUMN_PASSWORD, hashedPassword.getValue()));
         }
+        if (query.getInUserIds() != null && !query.getInUserIds().isEmpty()) {
+            statement.addOperator(new Operator.In(COLUMN_ID, query.getInUserIds()));
+        }
         if (query.page < 0) {
             statement.page(0);
         }
@@ -168,6 +171,7 @@ public class UserRepository {
         private String name;
         private String username;
         private String password;
+        private List<String> inUserIds;
         private int page;
         @Setter
         private int limit;

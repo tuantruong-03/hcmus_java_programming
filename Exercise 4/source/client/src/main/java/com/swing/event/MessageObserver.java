@@ -5,17 +5,19 @@ import com.swing.events.Event;
 import com.swing.models.Message;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 @Getter
 public class MessageObserver implements EventObserver {
     private final String name;
-    private List<Consumer<Message>> consumers;
+    private final List<Consumer<Message>> consumers;
     private Message message;
 
     public MessageObserver(String name) {
         this.message = new Message();
+        this.consumers = new ArrayList<>();
         this.name = name;
     }
 

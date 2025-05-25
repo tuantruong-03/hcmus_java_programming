@@ -97,6 +97,7 @@ public class AuthHandler {
         inputContext.setStatus(InputContext.Status.OK);
         InputContext.Principal principal = InputContext.Principal.builder()
                 .userId(user.get().getId())
+                .name(user.get().getName())
                 .username(user.get().getUsername())
                 .build();
         inputContext.setPrincipal(principal);

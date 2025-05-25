@@ -68,7 +68,7 @@ public class ApplicationContext {
             context.chatRoomUserRepository = new ChatRoomUserRepository(db);
             context.messageRepository = new MessageRepository(db);
             context.authHandler = new AuthHandler(context.userRepository);
-            context.chatRoomHandler = new ChatRoomHandler(context.chatRoomRepository, context.chatRoomUserRepository);
+            context.chatRoomHandler = new ChatRoomHandler(context.chatRoomRepository, context.chatRoomUserRepository, context.userRepository);
             context.userHandler = new UserHandler(context.userRepository);
             context.messageHandler = new MessageHandler(context.messageRepository, context.chatRoomRepository, context.chatRoomUserRepository);
             log.info("Application context initialized successfully.");

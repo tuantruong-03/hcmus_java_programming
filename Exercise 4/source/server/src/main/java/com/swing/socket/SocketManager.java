@@ -60,7 +60,7 @@ public class SocketManager { //NOSONAR
 
     public void onEvent(Event event) {
         switch (event.getType()) {
-            case Event.Type.LOGIN:
+            case Event.Type.USER_LOGIN:
                 Event.LoginPayload loginPayload = (Event.LoginPayload) event.getPayload();
                 log.info("SocketManager::onEvent: LOGIN: " + loginPayload.getClientId());
                 for (ClientWorker clientWorker : clients.values()) {

@@ -77,6 +77,7 @@ public class ClientWorker implements Runnable {
                 else this.write(response.getValue());
             } catch (IOException e) {
                 log.warning("Client disconnected or error: " + e.getMessage());
+                socketManager.removeClient(clientId);
                 return;
             }
 
@@ -162,8 +163,9 @@ public class ClientWorker implements Runnable {
             if (user.isPresent()) {
                 this.userId = user.get().getId();
                 String username = user.get().getUsername();
-                Event.LoginPayload loginPayload = new Event.LoginPayload(clientId, userId, username);
-                Event event = new Event(Event.Type.LOGIN, loginPayload);
+                String name = user.get().getName();
+                Event.LoginPayload loginPayload = new Event.LoginPayload(clientId, userId, name, username);
+                Event event = new Event(Event.Type.USER_LOGIN, loginPayload);
                 emitEvent(event);
             }
         }
@@ -172,7 +174,7 @@ public class ClientWorker implements Runnable {
 
     private Result<Output<?>> handleCreateChatRoomCommand(InputContext<CreateChatRoomInput, CreateChatRoomOutput> inputContext) {
         HandlerRegistry.withInputContext(inputContext)
-                .register(authHandler::authenticate, chatRoomHandler::create)
+                .register(authHandler::authenticate, chatRoomHandler::createOne)
                 .handle();
         return Result.success(inputContext.getOutput());
     }
@@ -253,9 +255,9 @@ public class ClientWorker implements Runnable {
 
     public Exception onEvent(Event event) {
         switch (event.getType()) {
-            case LOGIN, SEND_MESSAGE:
+            case USER_LOGIN, SEND_MESSAGE:
                 return eventPublisher.publish(event);
-            case LOGOUT:
+            case USER_LOGOUT:
                 break;
             default:
                 break;

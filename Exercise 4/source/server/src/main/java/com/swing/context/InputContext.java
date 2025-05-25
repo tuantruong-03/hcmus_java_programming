@@ -42,8 +42,9 @@ public class InputContext<I, O> {
     @Builder
     @Getter
     public static class Principal {
-        private String username;
         private String userId;
+        private String name;
+        private String username;
     }
 
     public enum Status {

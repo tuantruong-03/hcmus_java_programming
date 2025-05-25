@@ -10,7 +10,7 @@ import java.awt.*;
 @Log
 public class ConnectPanel  extends JPanel {
     public ConnectPanel(MainFrame parent) {
-        super(new GridLayout(4, 2, 5, 5));
+        super(new GridLayout(3, 2, 5, 5));
         setBorder(BorderFactory.createTitledBorder("Connect to Server"));
 
         // IP Address input

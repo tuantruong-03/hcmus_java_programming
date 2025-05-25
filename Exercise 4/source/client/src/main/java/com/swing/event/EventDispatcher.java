@@ -41,6 +41,11 @@ public class EventDispatcher implements Runnable {
                         messageObserver.onEvent(event);
                     }
                     break;
+                case USER_LOGIN:
+                    if (observer instanceof UserLoginObserver userLoginObserver) {
+                        userLoginObserver.onEvent(event);
+                    }
+                    break;
                 default:
                     break;
             }

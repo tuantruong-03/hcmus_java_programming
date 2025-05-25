@@ -1,11 +1,12 @@
 package com.swing.views.chat;
 
 
+import com.swing.models.ChatRoom;
 
 public class GroupChatRoomPanel extends ChatRoomPanel {
 
-    public GroupChatRoomPanel(String chatId) {
-        super(chatId);
+    public GroupChatRoomPanel(ChatRoom chatRoom) {
+        super(chatRoom);
     }
 
     // Implement sending message for group chat

@@ -1,5 +1,6 @@
 package com.swing.io.chatroom;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.swing.types.Result;
 import lombok.Getter;
 
@@ -11,6 +12,7 @@ import java.util.List;
 public class CreateChatRoomInput {
     private String name;
     private List<String> otherUserIds;
+    @JsonProperty("group")
     private boolean isGroup;
     private CreateChatRoomInput() {}
 
