@@ -3,6 +3,7 @@ package com.swing.context;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swing.callers.AuthCaller;
 import com.swing.callers.ChatRoomCaller;
+import com.swing.callers.MessageCaller;
 import com.swing.callers.UserCaller;
 import com.swing.event.EventDispatcher;
 import com.swing.io.Input;
@@ -26,6 +27,8 @@ public class ApplicationContext {
     private UserCaller userCaller;
     @Getter
     private ChatRoomCaller chatRoomCaller;
+    @Getter
+    private MessageCaller messageCaller;
 
     @Getter
     private EventDispatcher eventDispatcher;
@@ -47,6 +50,7 @@ public class ApplicationContext {
             context.authCaller = new AuthCaller(socketConnection, context.objectMapper);
             context.userCaller = new UserCaller(socketConnection, context.objectMapper);
             context.chatRoomCaller = new ChatRoomCaller(socketConnection, context.objectMapper);
+            context.messageCaller = new MessageCaller(socketConnection, context.objectMapper);
             Holder.instance = context;
             return null;
         } catch (Exception e) {
