@@ -9,14 +9,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Log
-public class EventDispatcher {
+public class EventDispatcher implements Runnable {
 
     private final BufferedReader reader;
     private final ObjectMapper mapper;
     private final Map<String,EventObserver> observers = new HashMap<>();
 
-    public EventDispatcher(Reader reader) {
-        this.reader = new BufferedReader(reader);
+    public EventDispatcher(BufferedReader reader) {
+        this.reader = reader;
         this.mapper = new ObjectMapper();
     }
 
@@ -32,7 +32,7 @@ public class EventDispatcher {
         return observers.get(name);
     }
 
-    private void notify(Event event) {
+    private void dispatch(Event event) {
         Event.Type type = event.getType();
         for (EventObserver observer : observers.values()) {
             switch (type) {
@@ -47,19 +47,23 @@ public class EventDispatcher {
         }
     }
 
+    @Override
     public void run() {
         String line;
+        log.info("EventDispatcher is running...");
         while (true) {
             try {
+                log.info("Waiting for line...");
                 line = reader.readLine();
+                log.info("Received line: " + line);
                 Event event = mapper.readValue(line, Event.class);
-                notify(event); // Notify observers
+                log.info("Received event: " + event);
+                dispatch(event); // Notify observers
             } catch (IOException e) {
-                log.info("Client disconnected or error: " + e.getMessage());
+                log.warning("Client disconnected or error: " + e.getMessage());
                 break;
             }
         }
 
     }
-
 }

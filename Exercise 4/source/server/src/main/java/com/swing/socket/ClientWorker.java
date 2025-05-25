@@ -54,7 +54,7 @@ public class ClientWorker implements Runnable {
         this.reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
         this.writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
         this.eventPublisher = new EventPublisher(writer);
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = ApplicationContext.getInstance().getObjectMapper();
     }
 
     public void run() {
@@ -77,6 +77,7 @@ public class ClientWorker implements Runnable {
                 else this.write(response.getValue());
             } catch (IOException e) {
                 log.warning("Client disconnected or error: " + e.getMessage());
+                return;
             }
 
         }

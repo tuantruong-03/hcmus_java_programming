@@ -28,7 +28,7 @@ public class InputContext<I, O> {
     }
 
     public String getToken() {
-        return contextMap.get("token").toString();
+        return input.getMetadata().get("token");
     }
 
     public Principal getPrincipal() {

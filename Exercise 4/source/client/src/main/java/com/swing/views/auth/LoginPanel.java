@@ -1,10 +1,14 @@
 package com.swing.views.auth;
 
 import com.swing.callers.AuthCaller;
+import com.swing.callers.CallerUtils;
+import com.swing.callers.UserCaller;
 import com.swing.context.ApplicationContext;
+import com.swing.context.AuthContext;
 import com.swing.io.Output;
 import com.swing.io.user.LoginUserInput;
 import com.swing.io.user.LoginUserOutput;
+import com.swing.io.user.UserOutput;
 import com.swing.types.Result;
 import lombok.extern.java.Log;
 
@@ -15,6 +19,7 @@ import java.awt.event.ActionEvent;
 @Log
 class LoginPanel extends JPanel {
     private final AuthPanel _parent;
+    private final transient UserCaller userCaller;
     private final transient AuthCaller authCaller;
 
     private final JTextField usernameField;
@@ -42,42 +47,50 @@ class LoginPanel extends JPanel {
         add(loginButton);
 
         this.authCaller = ApplicationContext.getInstance().getAuthCaller();
+        this.userCaller = ApplicationContext.getInstance().getUserCaller();
     }
 
     private void handleLoginButton(ActionEvent e) {
         String username = usernameField.getText();
         String password = String.valueOf(passwordField.getPassword());
-        try {
-            Result<LoginUserInput> buildRequestResult = LoginUserInput.builder()
-                    .username(username)
-                    .password(password)
-                    .build();
-            if (buildRequestResult.isFailure()) {
-                errorLabel.setText("Login failed: " + buildRequestResult.getException().getMessage());
-                return;
-            }
-            errorLabel.setForeground(new Color(0, 128, 0));  // Success color (green)
-            Result<Output<LoginUserOutput>> registerResult = authCaller.login(buildRequestResult.getValue());
-            if (registerResult.isFailure()) {
-                log.warning("failed to login: " + registerResult.getException());
-                return;
-            }
-            Output<LoginUserOutput> output = registerResult.getValue();
-            if (output.getError() != null) {
-                errorLabel.setText("Login failed: " + output.getError().getMessage());
-                return;
-            }
-            Exception exception = ApplicationContext.getInstance().runEventDispatcher();
-            if (exception != null) {
-                log.warning(exception.getMessage());
-                errorLabel.setText("Login failed: " + exception.getMessage());
-                return;
-            }
-            errorLabel.setText("Login successfully!");
-            _parent.onLoginSuccess();
-
-        } catch (Exception ex) {
-            errorLabel.setText("Error: " + ex.getMessage());
+        Result<LoginUserInput> buildRequestResult = LoginUserInput.builder()
+                .username(username)
+                .password(password)
+                .build();
+        if (buildRequestResult.isFailure()) {
+            errorLabel.setText("Login failed: " + buildRequestResult.getException().getMessage());
+            return;
         }
+        errorLabel.setForeground(new Color(0, 128, 0));  // Success color (green)
+        Result<Output<LoginUserOutput>> registerResult = authCaller.login(buildRequestResult.getValue());
+        if (registerResult.isFailure()) {
+            log.warning("failed to login: " + registerResult.getException());
+            return;
+        }
+        Output<LoginUserOutput> output = registerResult.getValue();
+        if (output.getError() != null) {
+            log.warning("failed to login: " + output.getError().getMessage());
+            errorLabel.setText("Login failed, please try again" );
+            return;
+        }
+        LoginUserOutput loginUserOutput = output.getBody();
+        CallerUtils.INSTANCE.setToken(loginUserOutput.getToken());
+        Result<Output<UserOutput>> result = userCaller.getMyProfile();
+        if (result.isFailure()) {
+            log.warning("failed to login: " + result.getException().getMessage());
+            errorLabel.setText("Login failed, please try again" );
+            return;
+        }
+        UserOutput userOutput = result.getValue().getBody();
+        AuthContext.Principal principal = new AuthContext.Principal(userOutput.getId(), userOutput.getUsername());
+        AuthContext.INSTANCE.setPrincipal(principal);
+        Exception exception = ApplicationContext.getInstance().runEventDispatcher();
+        if (exception != null) {
+            log.warning(exception.getMessage());
+            errorLabel.setText("Login failed, please try again" + exception.getMessage());
+            return;
+        }
+        errorLabel.setText("Login successfully!");
+        _parent.onLoginSuccess();
     }
 }

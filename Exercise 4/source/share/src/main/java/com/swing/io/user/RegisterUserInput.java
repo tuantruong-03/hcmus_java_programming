@@ -1,10 +1,16 @@
 package com.swing.io.user;
 
 import com.swing.types.Result;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
+@Builder
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class RegisterUserInput {
     private String name;
     private String username;

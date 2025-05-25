@@ -2,6 +2,7 @@ package com.swing.context;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swing.callers.AuthCaller;
+import com.swing.callers.UserCaller;
 import com.swing.event.EventDispatcher;
 import com.swing.io.Input;
 import lombok.Getter;
@@ -17,8 +18,11 @@ import java.nio.charset.StandardCharsets;
 public class ApplicationContext {
 
     private SocketConnection socketConnection;
+    private ObjectMapper objectMapper;
     @Getter
     private AuthCaller authCaller;
+    @Getter
+    private UserCaller userCaller;
 
     @Getter
     private EventDispatcher eventDispatcher;
@@ -31,13 +35,15 @@ public class ApplicationContext {
     }
 
     public static Exception init(SocketConnection socketConnection) {
-        ApplicationContext instance = new ApplicationContext();
-        instance.socketConnection = socketConnection;
+        ApplicationContext context = new ApplicationContext();
+        context.socketConnection = socketConnection;
+        context.objectMapper = new ObjectMapper();
         try (Socket socket = new Socket();){
             // Try to ping that server
             socket.connect(new InetSocketAddress(socketConnection.getHost(), socketConnection.getPort()), 500);
-            instance.authCaller = new AuthCaller(socketConnection);
-            Holder.instance = instance;
+            context.authCaller = new AuthCaller(socketConnection, context.objectMapper);
+            context.userCaller = new UserCaller(socketConnection, context.objectMapper);
+            Holder.instance = context;
             return null;
         } catch (Exception e) {
             return e;
@@ -53,7 +59,6 @@ public class ApplicationContext {
 
     public Exception runEventDispatcher() {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
             Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
@@ -69,7 +74,8 @@ public class ApplicationContext {
             String responseJson = reader.readLine();
             log.info("Server response: " + responseJson);
             this.eventDispatcher = new EventDispatcher(reader);
-            this.eventDispatcher.run();
+            Thread thread = Thread.startVirtualThread(this.eventDispatcher);
+            log.info("Started thread: " + thread);
             return null;
         } catch (IOException e) {
             return e;

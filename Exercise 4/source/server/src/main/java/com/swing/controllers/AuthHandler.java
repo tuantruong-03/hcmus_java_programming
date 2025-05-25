@@ -40,6 +40,7 @@ public class AuthHandler {
                     .message("Username already exists")
                     .build();
             inputContext.setOutput(Output.<RegisterUserOutput>builder().error(error).build());
+            return;
         }
         User user = User.builder()
                 .id(UUID.randomUUID().toString())
@@ -95,6 +96,7 @@ public class AuthHandler {
         inputContext.setAuthenticated(true);
         inputContext.setStatus(InputContext.Status.OK);
         InputContext.Principal principal = InputContext.Principal.builder()
+                .userId(user.get().getId())
                 .username(user.get().getUsername())
                 .build();
         inputContext.setPrincipal(principal);

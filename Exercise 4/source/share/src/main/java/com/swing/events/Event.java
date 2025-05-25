@@ -10,6 +10,7 @@ import java.util.List;
 
 @Builder
 @Getter
+@NoArgsConstructor
 public class Event {
     private Type type;
     private Object payload;

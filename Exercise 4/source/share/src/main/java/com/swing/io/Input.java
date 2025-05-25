@@ -1,12 +1,10 @@
 package com.swing.io;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Map;
 
+@Setter
 @Getter
 @Builder
 @NoArgsConstructor
@@ -14,6 +12,7 @@ import java.util.Map;
 public class Input<T> {
     private Command command;
     private Map<String, String> metadata;
+
     private T body;
 
     public enum Command {

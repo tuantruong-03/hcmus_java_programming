@@ -2,6 +2,7 @@ package com.swing.views.auth;
 
 import com.swing.callers.AuthCaller;
 import com.swing.context.ApplicationContext;
+import com.swing.io.Output;
 import com.swing.io.user.RegisterUserInput;
 import com.swing.types.Result;
 import lombok.extern.java.Log;
@@ -27,17 +28,17 @@ class RegisterPanel extends JPanel {
         this.parent = parent;
         // Name field
         add(new JLabel("Name:"));
-         nameField = new JTextField("Tuan Truong");
+        nameField = new JTextField("Jane Bach");
         add(nameField);
 
         // Username field
         add(new JLabel("Username:"));
-         usernameField = new JTextField("tuan.truong");
+        usernameField = new JTextField("jane.bach");
         add(usernameField);
 
         // Password field
         add(new JLabel("Password:"));
-         passwordField = new JPasswordField("123456");
+        passwordField = new JPasswordField("123456");
         add(passwordField);
 
         JButton registerButton = new JButton("Register");
@@ -58,27 +59,29 @@ class RegisterPanel extends JPanel {
         String username = usernameField.getText();
         String password = String.valueOf(passwordField.getPassword());
 
-        try {
-            Result<RegisterUserInput> buildRequestResult = RegisterUserInput.builder()
-                    .name(name)
-                    .username(username)
-                    .password(password)
-                    .build();
-            if (buildRequestResult.isFailure()) {
-                errorLabel.setText("Registration failed: " + buildRequestResult.getException().getMessage());
-                return;
-            }
-            errorLabel.setForeground(new Color(0, 128, 0));  // Success color (green)
-            Result<?> registerResult = authCaller.register(buildRequestResult.getValue());
-            if (registerResult.isFailure()) {
-                log.warning("failed to register: " + registerResult.getException());
-                errorLabel.setText("Registration failed: " + buildRequestResult.getException().getMessage());
-                return;
-            }
-            errorLabel.setText("Register successfully!");
-
-        } catch (Exception ex) {
-            errorLabel.setText("Error: " + ex.getMessage());
+        Result<RegisterUserInput> buildRequestResult = RegisterUserInput.builder()
+                .name(name)
+                .username(username)
+                .password(password)
+                .build();
+        if (buildRequestResult.isFailure()) {
+            errorLabel.setText("Registration failed: " + buildRequestResult.getException().getMessage());
+            return;
         }
+        errorLabel.setForeground(new Color(0, 128, 0));  // Success color (green)
+        Result<Output<Void>> registerResult = authCaller.register(buildRequestResult.getValue());
+        if (registerResult.isFailure()) {
+            log.warning("failed to register: " + registerResult.getException());
+            errorLabel.setText("Registration failed: " + buildRequestResult.getException().getMessage());
+            return;
+        }
+        Output<Void> output = registerResult.getValue();
+        if (output.getError() != null) {
+            log.warning("failed to register: " + output.getError().getMessage());
+            errorLabel.setText("Registration failed: " + output.getError().getMessage());
+            return;
+        }
+        errorLabel.setText("Register successfully!");
+
     }
 }

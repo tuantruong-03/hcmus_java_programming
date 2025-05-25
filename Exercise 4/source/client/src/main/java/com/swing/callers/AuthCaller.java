@@ -20,8 +20,8 @@ public class AuthCaller {
     private final ObjectMapper mapper;
     private final SocketConnection socketConnection;
 
-    public AuthCaller(SocketConnection socketConnection) {
-        this.mapper = new ObjectMapper();
+    public AuthCaller(SocketConnection socketConnection, ObjectMapper mapper) {
+        this.mapper = mapper;
         this.socketConnection = socketConnection;
     }
 

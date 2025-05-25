@@ -62,18 +62,24 @@ public class SocketManager { //NOSONAR
         switch (event.getType()) {
             case Event.Type.LOGIN:
                 Event.LoginPayload loginPayload = (Event.LoginPayload) event.getPayload();
+                log.info("SocketManager::onEvent: LOGIN: " + loginPayload.getClientId());
                 for (ClientWorker clientWorker : clients.values()) {
                     if (clientWorker.getClientId().equals(loginPayload.getClientId())) continue;
+                    log.info(String.format("SocketManager::onEvent LOGIN: from %s to %s", clientWorker.getClientId(), loginPayload.getClientId()));
                     Exception exception = clientWorker.onEvent(event);
-                    log.warning("SocketManager::onEvent: " + exception.getMessage());
+                    if (exception != null) {
+                        log.warning("SocketManager::onEvent: " + exception.getMessage());
+                    }
                 }
                 break;
             case Event.Type.SEND_MESSAGE:
                 Event.SendMessagePayload sendMessagePayload = (Event.SendMessagePayload) event.getPayload();
                 for (ClientWorker clientWorker : clients.values()) {
-                    if (sendMessagePayload.getReceiverIds().contains(clientWorker.getClientId())) {
+                    if (sendMessagePayload.getReceiverIds().contains(clientWorker.getUserId())) {
                         Exception exception = clientWorker.onEvent(event);
-                        log.warning("SocketManager::onEvent: " + exception.getMessage());
+                        if (exception != null) {
+                            log.warning("SocketManager::onEvent: " + exception.getMessage());
+                        }
                     }
                 }
                 break;

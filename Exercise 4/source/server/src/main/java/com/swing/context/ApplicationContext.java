@@ -1,6 +1,8 @@
 package com.swing.context;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.swing.database.Database;
 import com.swing.controllers.AuthHandler;
 import com.swing.controllers.ChatRoomHandler;
@@ -23,6 +25,7 @@ import java.util.Properties;
 public class ApplicationContext {
     private static ApplicationContext context;
 
+    private ObjectMapper objectMapper;
     private UserRepository userRepository;
     private ChatRoomRepository chatRoomRepository;
     private ChatRoomUserRepository chatRoomUserRepository;
@@ -31,7 +34,6 @@ public class ApplicationContext {
     private ChatRoomHandler chatRoomHandler;
     private UserHandler userHandler;
     private MessageHandler messageHandler;
-
     private EventPublisher eventPublisher;
 
     private ApplicationContext() {}
@@ -59,6 +61,8 @@ public class ApplicationContext {
                     password
             );
             Database db = new Database(options);
+            context.objectMapper = new ObjectMapper();
+            context.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
             context.userRepository = new UserRepository(db);
             context.chatRoomRepository = new ChatRoomRepository(db);
             context.chatRoomUserRepository = new ChatRoomUserRepository(db);
