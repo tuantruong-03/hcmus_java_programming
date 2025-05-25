@@ -33,39 +33,6 @@ public class MessageHandler {
         this.chatRoomUserRepository = chatRoomUserRepository;
     }
 
-    public void findMany(InputContext<GetMessagesInput, GetMessagesOutput> context) {
-        Input<GetMessagesInput> input = context.getInput();
-        GetMessagesInput body = input.getBody();
-        var result = messageRepository.findMany(MessageRepository.Query.builder()
-                        .chatRoomId(body.getChatRoomId())
-                .page(body.getPage())
-                .limit(body.getLimit())
-                .build());
-        if (result.isFailure()) {
-            log.warning("MessageHandler::findMany: " + result.getException().getMessage());
-            Output.Error error = Output.Error.interalServerError();
-            context.setOutput(Output.<GetMessagesOutput>builder().error(error).build());
-            return;
-        }
-        List<Message> messages = result.getValue();
-        List<GetMessagesOutput.Item> items = messages.stream()
-                .map(message -> GetMessagesOutput.Item.builder()
-                        .messageId(message.getId())
-                        .chatRoomId(message.getChatRoomId())
-                        .senderId(message.getSenderId())
-                        .content(MessageContentMapper.fromModelToIO(message.getContent()))
-                        .createdAt(message.getCreatedAt())
-                        .updatedAt(message.getUpdatedAt())
-                        .build())
-                .toList();
-        GetMessagesOutput outputBody = GetMessagesOutput.builder()
-                .items(items)
-                .build();
-        context.setStatus(InputContext.Status.OK);
-        context.setOutput(Output.<GetMessagesOutput>builder()
-                .body(outputBody)
-                .build());
-    }
 
     public void createOne(InputContext<CreateMessageInput, CreateMessageOutput> context) {
         Input<CreateMessageInput> input = context.getInput();
@@ -143,7 +110,86 @@ public class MessageHandler {
             return Result.failure(result2.getException());
         }
         return Result.success(CreateChatRoomOutput.builder()
-                        .chatRoomId(chatRoomId)
+                .chatRoomId(chatRoomId)
+                .build());
+    }
+
+    public void findMany(InputContext<GetMessagesInput, GetMessagesOutput> context) {
+        Input<GetMessagesInput> input = context.getInput();
+        GetMessagesInput body = input.getBody();
+        var result = messageRepository.findMany(MessageRepository.Query.builder()
+                        .chatRoomId(body.getChatRoomId())
+                .page(body.getPage())
+                .limit(body.getLimit())
+                .build());
+        if (result.isFailure()) {
+            log.warning("MessageHandler::findMany: " + result.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setOutput(Output.<GetMessagesOutput>builder().error(error).build());
+            return;
+        }
+        List<Message> messages = result.getValue();
+        List<GetMessagesOutput.Item> items = messages.stream()
+                .map(message -> GetMessagesOutput.Item.builder()
+                        .messageId(message.getId())
+                        .chatRoomId(message.getChatRoomId())
+                        .senderId(message.getSenderId())
+                        .content(MessageContentMapper.fromModelToIO(message.getContent()))
+                        .createdAt(message.getCreatedAt())
+                        .updatedAt(message.getUpdatedAt())
+                        .build())
+                .toList();
+        GetMessagesOutput outputBody = GetMessagesOutput.builder()
+                .items(items)
+                .build();
+        context.setStatus(InputContext.Status.OK);
+        context.setOutput(Output.<GetMessagesOutput>builder()
+                .body(outputBody)
+                .build());
+    }
+
+    public void update(InputContext<UpdateMessageInput, UpdateMessageOutput> context) {
+        Input<UpdateMessageInput> input = context.getInput();
+        UpdateMessageInput body = input.getBody();
+        MessageRepository.UpdatePayload payload = MessageRepository.UpdatePayload.builder()
+                .content(MessageContentMapper.fromIOToModel(body.getContent()))
+                .build();
+        MessageRepository.Query query = MessageRepository.Query.builder()
+                .messageId(body.getMessageId())
+                .chatRoomId(body.getChatRoomId())
+                .build();
+        var result = messageRepository.update(payload, query);
+        if (result.isFailure()) {
+            log.warning("MessageHandler::update: " + result.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setOutput(Output.<UpdateMessageOutput>builder().error(error).build());
+            return;
+        }
+        UpdateMessageOutput output = UpdateMessageOutput.builder().build();
+        context.setStatus(InputContext.Status.OK);
+        context.setOutput(Output.<UpdateMessageOutput>builder()
+                .body(output)
+                .build());
+    }
+
+    public void delete(InputContext<DeleteMessageInput, DeleteMessageOutput> context) {
+        Input<DeleteMessageInput> input = context.getInput();
+        DeleteMessageInput body = input.getBody();
+        MessageRepository.Query query = MessageRepository.Query.builder()
+                .messageId(body.getMessageId())
+                .chatRoomId(body.getChatRoomId())
+                .build();
+        var result = messageRepository.delete(query);
+        if (result.isFailure()) {
+            log.warning("MessageHandler::delete: " + result.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setOutput(Output.<DeleteMessageOutput>builder().error(error).build());
+            return;
+        }
+        DeleteMessageOutput output = DeleteMessageOutput.builder().build();
+        context.setStatus(InputContext.Status.OK);
+        context.setOutput(Output.<DeleteMessageOutput>builder()
+                .body(output)
                 .build());
     }
 }

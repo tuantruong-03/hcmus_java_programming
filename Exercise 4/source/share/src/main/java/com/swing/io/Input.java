@@ -20,12 +20,17 @@ public class Input<T> {
         LOGIN,
         LOGOUT,
         DISCONNECT,
-        CREATE_CHATROOM,
+        KEEP_CONNECTION_ALIVE,
+
         GET_MY_PROFILE,
+
+        CREATE_CHATROOM,
         GET_MY_CHAT_ROOMS,
         GET_CHAT_ROOM,
+
         GET_MESSAGES,
-        KEEP_CONNECTION_ALIVE,
         SEND_MESSAGE,
+        DELETE_MESSAGE,
+        UPDATE_MESSAGE,
     }
 }

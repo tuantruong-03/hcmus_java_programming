@@ -183,8 +183,8 @@ public class MessageRepository {
     private Result<Statement> buildStatement(Query query) {
         var statement = new Statement(TABLE_NAME);
 
-        if (query.getId() != null) {
-            statement.addOperator(new Operator.Eq(COLUMN_ID, query.getId()));
+        if (query.getMessageId() != null) {
+            statement.addOperator(new Operator.Eq(COLUMN_ID, query.getMessageId()));
         }
         if (query.getChatRoomId() != null) {
             statement.addOperator(new Operator.Eq(COLUMN_CHAT_ROOM_ID, query.getChatRoomId()));
@@ -192,23 +192,31 @@ public class MessageRepository {
         if (query.getSenderId() != null) {
             statement.addOperator(new Operator.Eq(COLUMN_SENDER_ID, query.getSenderId()));
         }
-        if (query.getInIds() != null && !query.getInIds().isEmpty()) {
-            statement.addOperator(new Operator.In(COLUMN_ID, query.getInIds()));
+        if (query.getInMessageIds() != null && !query.getInMessageIds().isEmpty()) {
+            statement.addOperator(new Operator.In(COLUMN_ID, query.getInMessageIds()));
         }
 
         if (query.page < 0) statement.page(0);
         if (query.limit < 0) statement.limit(10);
 
+        if (query.sorts == null || query.sorts.isEmpty()) {
+            Sort sort = new Sort(COLUMN_UPDATED_AT, false);
+            statement.addSort(sort);
+        } else {
+            for (Sort sort : query.sorts) {
+                statement.addSort(sort);
+            }
+        }
         return Result.success(statement);
     }
 
     @Builder
     @Getter
     public static class Query {
-        private String id;
+        private String messageId;
         private String chatRoomId;
         private String senderId;
-        private List<String> inIds;
+        private List<String> inMessageIds;
         private int page;
         @Setter
         private int limit;

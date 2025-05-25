@@ -1,11 +1,14 @@
 package com.swing.repository.query;
 
-import lombok.Builder;
 
-@Builder
 public class Sort {
-    private String field;
-    private boolean  isAscending;
+    private final String field;
+    private final boolean  isAscending;
+
+    public Sort(String field, boolean isAscending) {
+        this.field = field;
+        this.isAscending = isAscending;
+    }
 
     public String prepareStatement() {
         return field + (isAscending ? " ASC" : " DESC");

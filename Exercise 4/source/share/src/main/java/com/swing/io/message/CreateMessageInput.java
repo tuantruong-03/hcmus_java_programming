@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -17,8 +16,4 @@ public class CreateMessageInput {
     private Content content;
     private String senderId;
     private List<String> receiverIds;
-    private Date createdAt;
-    private Date updatedAt;
-
-
 }

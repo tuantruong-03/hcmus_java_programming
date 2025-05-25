@@ -5,14 +5,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateMessageOutput {
-    private String messageId;
+public class UpdateMessageInput {
     private String chatRoomId;
-    private Date createdAt;
+    private String messageId;
+    private Content content;
 }

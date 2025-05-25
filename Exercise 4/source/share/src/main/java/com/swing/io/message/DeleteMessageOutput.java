@@ -1,11 +1,12 @@
-package com.swing.io.user;
+
+package com.swing.io.message;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Builder
 @Getter
+@Builder
 @NoArgsConstructor
-public class RegisterUserOutput {
+public class DeleteMessageOutput {
 }

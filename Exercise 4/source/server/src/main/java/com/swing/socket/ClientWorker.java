@@ -134,6 +134,16 @@ public class ClientWorker implements Runnable {
                     InputContext<CreateMessageInput, CreateMessageOutput> ctx = new InputContext<>(input);
                     return handleSendMessageCommand(ctx);
                 }
+                case UPDATE_MESSAGE -> {
+                    Input<UpdateMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    InputContext<UpdateMessageInput, UpdateMessageOutput> ctx = new InputContext<>(input);
+                    return handleUpdateMessageCommand(ctx);
+                }
+                case DELETE_MESSAGE -> {
+                    Input<DeleteMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    InputContext<DeleteMessageInput, DeleteMessageOutput> ctx = new InputContext<>(input);
+                    return handleDeleteMessageCommand(ctx);
+                }
                 case KEEP_CONNECTION_ALIVE -> {
                     socketManager.keepAlive(this);
                     return Result.success(new Output<>());
@@ -148,7 +158,6 @@ public class ClientWorker implements Runnable {
             return Result.failure(new IllegalArgumentException("Invalid JSON: " + e.getMessage()));
         }
     }
-
 
     private Result<Output<?>> handleRegisterCommand(InputContext<RegisterUserInput, RegisterUserOutput> inputContext) {
         HandlerRegistry.withInputContext(inputContext).register(authHandler::register).handle();
@@ -175,6 +184,27 @@ public class ClientWorker implements Runnable {
     private Result<Output<?>> handleCreateChatRoomCommand(InputContext<CreateChatRoomInput, CreateChatRoomOutput> inputContext) {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, chatRoomHandler::createOne)
+                .handle();
+        return Result.success(inputContext.getOutput());
+    }
+
+    private Result<Output<?>> handleGetMyProfileCommand(InputContext<Void, UserOutput> inputContext) {
+        HandlerRegistry.withInputContext(inputContext)
+                .register(authHandler::authenticate, userHandler::findMyProfile)
+                .handle();
+        return Result.success(inputContext.getOutput());
+    }
+
+    private Result<Output<?>> handleGetChatRoomCommand(InputContext<GetChatRoomInput, GetChatRoomOutput> inputContext) {
+        HandlerRegistry.withInputContext(inputContext)
+                .register(authHandler::authenticate, chatRoomHandler::findOne)
+                .handle();
+        return Result.success(inputContext.getOutput());
+
+    }
+    private Result<Output<?>> handleGetChatRoomsCommand(InputContext<GetChatRoomsInput, GetChatRoomsOutput> inputContext) {
+        HandlerRegistry.withInputContext(inputContext)
+                .register(authHandler::authenticate, chatRoomHandler::findMyChatRooms)
                 .handle();
         return Result.success(inputContext.getOutput());
     }
@@ -214,30 +244,23 @@ public class ClientWorker implements Runnable {
         return Result.success(inputContext.getOutput());
     }
 
-    private Result<Output<?>> handleGetMyProfileCommand(InputContext<Void, UserOutput> inputContext) {
-        HandlerRegistry.withInputContext(inputContext)
-                .register(authHandler::authenticate, userHandler::findMyProfile)
-                .handle();
-        return Result.success(inputContext.getOutput());
-    }
-
-    private Result<Output<?>> handleGetChatRoomCommand(InputContext<GetChatRoomInput, GetChatRoomOutput> inputContext) {
-        HandlerRegistry.withInputContext(inputContext)
-                .register(authHandler::authenticate, chatRoomHandler::findOne)
-                .handle();
-        return Result.success(inputContext.getOutput());
-
-    }
-    private Result<Output<?>> handleGetChatRoomsCommand(InputContext<GetChatRoomsInput, GetChatRoomsOutput> inputContext) {
-        HandlerRegistry.withInputContext(inputContext)
-                .register(authHandler::authenticate, chatRoomHandler::findMyChatRooms)
-                .handle();
-        return Result.success(inputContext.getOutput());
-    }
-
     private Result<Output<?>> handleGetMessagesCommand(InputContext<GetMessagesInput, GetMessagesOutput> inputContext) {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, messageHandler::findMany)
+                .handle();
+        return Result.success(inputContext.getOutput());
+    }
+
+    private Result<Output<?>> handleUpdateMessageCommand(InputContext<UpdateMessageInput, UpdateMessageOutput> inputContext) {
+        HandlerRegistry.withInputContext(inputContext)
+                .register(authHandler::authenticate, messageHandler::update)
+                .handle();
+        return Result.success(inputContext.getOutput());
+    }
+
+    private Result<Output<?>> handleDeleteMessageCommand(InputContext<DeleteMessageInput, DeleteMessageOutput> inputContext) {
+        HandlerRegistry.withInputContext(inputContext)
+                .register(authHandler::authenticate, messageHandler::delete)
                 .handle();
         return Result.success(inputContext.getOutput());
     }
