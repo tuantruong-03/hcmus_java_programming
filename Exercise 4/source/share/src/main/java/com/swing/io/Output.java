@@ -17,19 +17,29 @@ public class Output<T> {
     @Getter
     @NoArgsConstructor
     public static class Error {
-        private int code;
+        private Code code;
         private String message;
-        public Error(int code, String message) {
+        public Error(Code code, String message) {
             this.code = code;
             this.message = message;
         }
 
         public static Error interalServerError() {
-            return new Error(500, "Internal Server Error");
+            return new Error(Code.INTERNAL_SERVER_ERROR, "Internal Server Error");
         }
 
         public static Error badRequest(String message) {
-            return new Error(400, message);
+            return new Error(Code.BAD_REQUEST, message);
+        }
+
+        public static Error notFound(String message) {
+            return new Error(Code.NOT_FOUND, message);
+        }
+
+        public enum Code {
+            BAD_REQUEST,
+            NOT_FOUND,
+            INTERNAL_SERVER_ERROR
         }
     }
 

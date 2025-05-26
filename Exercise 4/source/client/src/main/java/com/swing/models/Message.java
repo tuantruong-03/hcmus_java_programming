@@ -4,6 +4,7 @@ package com.swing.models;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Builder
@@ -15,7 +16,7 @@ public class Message {
     private Content content;
     private String senderId;
     private String senderName;
-    private String senderAvatar;
+    private List<String> receiverIds;
     private Date createdAt;
     private Date updatedAt;
 
@@ -27,7 +28,7 @@ public class Message {
         private String value;
         private Type type;
         public enum Type {
-            FILE, STRING
+            FILE, TEXT
         }
     }
 }

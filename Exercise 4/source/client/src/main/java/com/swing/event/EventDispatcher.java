@@ -36,7 +36,7 @@ public class EventDispatcher implements Runnable {
         Event.Type type = event.getType();
         for (EventObserver observer : observers.values()) {
             switch (type) {
-                case Event.Type.SEND_MESSAGE:
+                case Event.Type.SEND_MESSAGE, Event.Type.UPDATE_MESSAGE, Event.Type.DELETE_MESSAGE:
                     if (observer instanceof MessageObserver messageObserver) {
                         messageObserver.onEvent(event);
                     }

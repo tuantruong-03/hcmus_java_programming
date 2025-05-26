@@ -27,6 +27,7 @@ public class Input<T> {
         CREATE_CHATROOM,
         GET_MY_CHAT_ROOMS,
         GET_CHAT_ROOM,
+        CHECK_CHAT_ROOM_EXISTENCE,
 
         GET_MESSAGES,
         SEND_MESSAGE,

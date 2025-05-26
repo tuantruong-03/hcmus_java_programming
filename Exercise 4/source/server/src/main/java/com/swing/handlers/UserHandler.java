@@ -1,4 +1,4 @@
-package com.swing.controllers;
+package com.swing.handlers;
 
 import com.swing.context.InputContext;
 import com.swing.io.Output;
@@ -22,6 +22,7 @@ public class UserHandler {
         }
         UserOutput userOutput = UserOutput.builder()
                 .id(principal.getUserId())
+                .name(principal.getName())
                 .username(principal.getUsername())
                 .build();
         context.setOutput(Output.<UserOutput>builder()

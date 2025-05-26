@@ -24,6 +24,8 @@ public class Event {
         USER_LOGIN,
         USER_LOGOUT,
         SEND_MESSAGE,
+        DELETE_MESSAGE,
+        UPDATE_MESSAGE,
     }
 
     @Getter
@@ -49,23 +51,29 @@ public class Event {
     public static class SendMessagePayload {
         private String messageId;
         private String chatRoomId;
-        private Content content;
+        private MessageContent content;
         private String senderId;
         private String senderName;
         private List<String> receiverIds;
         private Date createdAt;
+    }
 
-        @Builder
-        @Getter
-        @NoArgsConstructor
-        @AllArgsConstructor
-        public static class Content {
-            private String value;
-            private Type type;
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DeleteMessagePayload {
+        private String messageId;
+        private String chatRoomId;
+    }
 
-            public enum Type {
-                FILE, TEXT
-            }
-        }
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateMessagePayload {
+        private String messageId;
+        private String chatRoomId;
+        private MessageContent content;
     }
 }

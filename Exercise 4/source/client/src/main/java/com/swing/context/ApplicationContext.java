@@ -72,6 +72,7 @@ public class ApplicationContext {
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
             Input<?> req = Input.builder()
                     .command(Input.Command.KEEP_CONNECTION_ALIVE)
+                    .body(AuthContext.INSTANCE.getPrincipal().getUserId())
                     .build();
             // Serialize and send the request
             String jsonString = objectMapper.writeValueAsString(req);

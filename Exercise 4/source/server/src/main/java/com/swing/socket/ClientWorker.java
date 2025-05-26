@@ -5,7 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swing.context.ApplicationContext;
 import com.swing.context.InputContext;
-import com.swing.controllers.*;
+import com.swing.events.MessageContent;
+import com.swing.handlers.*;
 import com.swing.io.Input;
 import com.swing.io.Output;
 import com.swing.io.chatroom.*;
@@ -124,6 +125,11 @@ public class ClientWorker implements Runnable {
                     InputContext<GetChatRoomsInput, GetChatRoomsOutput> ctx = new InputContext<>(input);
                     return handleGetChatRoomsCommand(ctx);
                 }
+                case CHECK_CHAT_ROOM_EXISTENCE -> {
+                    Input<CheckChatRoomExistenceInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    InputContext<CheckChatRoomExistenceInput, CheckChatRoomExistenceOutput> ctx = new InputContext<>(input);
+                    return handleCheckChatRoomExistence(ctx);
+                }
                 case GET_MESSAGES -> {
                     Input<GetMessagesInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
                     InputContext<GetMessagesInput, GetMessagesOutput> ctx = new InputContext<>(input);
@@ -145,6 +151,7 @@ public class ClientWorker implements Runnable {
                     return handleDeleteMessageCommand(ctx);
                 }
                 case KEEP_CONNECTION_ALIVE -> {
+                    this.userId = rootNode.get("body").asText();
                     socketManager.keepAlive(this);
                     return Result.success(new Output<>());
                 }
@@ -209,6 +216,13 @@ public class ClientWorker implements Runnable {
         return Result.success(inputContext.getOutput());
     }
 
+    private Result<Output<?>> handleCheckChatRoomExistence(InputContext<CheckChatRoomExistenceInput, CheckChatRoomExistenceOutput> inputContext) {
+        HandlerRegistry.withInputContext(inputContext)
+                .register(authHandler::authenticate, chatRoomHandler::checkChatRoomExistence)
+                .handle();
+        return Result.success(inputContext.getOutput());
+    }
+
     private Result<Output<?>> handleSendMessageCommand(InputContext<CreateMessageInput, CreateMessageOutput> inputContext) {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, messageHandler::createOne)
@@ -217,16 +231,16 @@ public class ClientWorker implements Runnable {
         if (inputContext.getStatus().equals(InputContext.Status.OK)) {
             CreateMessageInput inputBody = inputContext.getInput().getBody();
             CreateMessageOutput outputBody = inputContext.getOutput().getBody();
-            Event.SendMessagePayload.Content.Type type = null;
+            MessageContent.Type type = null;
             if (inputBody.getContent() != null) {
                 Content c = inputBody.getContent();
                 if (c.getType().equals(Content.Type.TEXT)) {
-                    type = Event.SendMessagePayload.Content.Type.TEXT;
+                    type = MessageContent.Type.TEXT;
                 } else if (c.getType().equals(Content.Type.FILE)) {
-                    type = Event.SendMessagePayload.Content.Type.FILE;
+                    type = MessageContent.Type.FILE;
                 }
             }
-            Event.SendMessagePayload.Content content = Event.SendMessagePayload.Content.builder()
+            MessageContent content = MessageContent.builder()
                     .type(type)
                     .value(inputBody.getContent() != null ? inputBody.getContent().getValue() : null)
                     .build();

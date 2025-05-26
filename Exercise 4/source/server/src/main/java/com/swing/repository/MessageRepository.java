@@ -35,7 +35,7 @@ public class MessageRepository {
     }
 
     public Result<Void> createOne(Message message) {
-        String sql = "INSERT INTO " + TABLE_NAME + " (id, chat_room_id, content, sender_id, created_at) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO " + TABLE_NAME + " (id, chat_room_id, content, sender_id) VALUES (?, ?, ?, ?)";
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -44,8 +44,7 @@ public class MessageRepository {
             stmt.setString(columnIndex++, message.getChatRoomId());
             String contentJson = objectMapper.writeValueAsString(message.getContent());
             stmt.setString(columnIndex++, contentJson);
-            stmt.setString(columnIndex++, message.getSenderId());
-            stmt.setDate(columnIndex, new Date(new java.util.Date().getTime()));
+            stmt.setString(columnIndex, message.getSenderId());
             stmt.executeUpdate();
             log.info("Message created successfully: " + message.getId());
             return Result.success(null);
@@ -200,7 +199,7 @@ public class MessageRepository {
         if (query.limit < 0) statement.limit(10);
 
         if (query.sorts == null || query.sorts.isEmpty()) {
-            Sort sort = new Sort(COLUMN_UPDATED_AT, false);
+            Sort sort = new Sort(COLUMN_CREATED_AT, false);
             statement.addSort(sort);
         } else {
             for (Sort sort : query.sorts) {

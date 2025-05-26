@@ -5,6 +5,8 @@ import com.swing.context.ApplicationContext;
 import com.swing.context.AuthContext;
 import com.swing.event.ObserverName;
 import com.swing.event.UserLoginObserver;
+import com.swing.io.Output;
+import com.swing.io.chatroom.CheckChatRoomExistenceInput;
 import com.swing.io.chatroom.GetChatRoomsInput;
 import com.swing.io.chatroom.GetChatRoomsOutput;
 import com.swing.models.ChatRoom;
@@ -40,8 +42,27 @@ public class MainChatPanel extends JPanel {
     }
 
     public void handleOtherUserLogin(User user) {
-        if (user.getId().equals(AuthContext.INSTANCE.getPrincipal().getUserId())) return;
-        boolean chatRoomExists = false;
+        String myUserId = AuthContext.INSTANCE.getPrincipal().getUserId();
+        if (user.getId().equals(myUserId)) return;
+        boolean chatRoomExists = true;
+        var result = chatRoomCaller.checkChatRoomExistence(
+                CheckChatRoomExistenceInput.builder()
+                        .userIds(List.of(user.getId(), myUserId))
+                        .isGroup(false)
+                        .build());
+        if (result.isFailure()) {
+            log.warning("MainChatPanels::handleOtherUserLogin: " + result.getException().getMessage());
+            return;
+        }
+        var output = result.getValue();
+        if (output.getError() != null) {
+            if (output.getError().getCode() == Output.Error.Code.NOT_FOUND) {
+                chatRoomExists = false;
+            } else {
+                log.warning("MainChatPanels::handleOtherUserLogin: " + result.getException().getMessage());
+                return;
+            }
+        }
         for (ChatRoomPanel chatRoomPanel : chatRoomPanels) {
             ChatRoom chatRoom = chatRoomPanel.getChatRoom();
             List<String> userIds = chatRoom.getUserIds();
@@ -106,7 +127,7 @@ public class MainChatPanel extends JPanel {
                         .build())
                 .toList();
         for (ChatRoom chatRoom : chatRooms) {
-            String chatRoomName = chatRoom.getName(); // "Tuan Truong, Jane Bach"
+            String chatRoomName = chatRoom.getName(); // "Tuan Truong,Jane Bach"
             if (!chatRoom.isGroup()) {
                 AuthContext.Principal principal = AuthContext.INSTANCE.getPrincipal();
                 String myName = principal.getName(); // "Tuan Truong"

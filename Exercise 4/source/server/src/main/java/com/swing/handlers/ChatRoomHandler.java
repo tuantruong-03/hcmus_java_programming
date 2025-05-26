@@ -1,4 +1,4 @@
-package com.swing.controllers;
+package com.swing.handlers;
 
 import com.swing.context.InputContext;
 import com.swing.io.Input;
@@ -85,6 +85,46 @@ public class ChatRoomHandler {
         context.setStatus(InputContext.Status.OK);
         context.setOutput(Output.<CreateChatRoomOutput>builder()
                 .body(CreateChatRoomOutput.builder().chatRoomId(chatRoomId).build())
+                .build());
+    }
+
+
+    public void checkChatRoomExistence(InputContext<CheckChatRoomExistenceInput, CheckChatRoomExistenceOutput> context) {
+        Input<CheckChatRoomExistenceInput> input = context.getInput();
+        CheckChatRoomExistenceInput body = input.getBody();
+
+        var result1 = chatRoomUserRepository.findChatRoomIdsByUserIds(body.getUserIds());
+        if (result1.isFailure()) {
+            log.warning("failed to checkChatRoomExistence: " + result1.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setOutput(Output.<CheckChatRoomExistenceOutput>builder().error(error).build());
+            return;
+        }
+        List<String> chatRoomIds = result1.getValue();
+        if (chatRoomIds == null || chatRoomIds.isEmpty()) {
+            Output.Error error = Output.Error.notFound("chatroom not found");
+            context.setOutput(Output.<CheckChatRoomExistenceOutput>builder().error(error).build());
+            return;
+        }
+        var result2 = chatRoomRepository.findMany(ChatRoomRepository.Query.builder()
+                .inChatRoomIds(chatRoomIds)
+                .isGroup(body.isGroup())
+                .build());
+        if (result2.isFailure()) {
+            log.warning("failed to checkChatRoomExistence: " + result2.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setOutput(Output.<CheckChatRoomExistenceOutput>builder().error(error).build());
+            return;
+        }
+        List<ChatRoom> chatRooms = result2.getValue();
+        if (chatRooms == null || chatRooms.isEmpty()) {
+            Output.Error error = Output.Error.notFound("chatroom not found");
+            context.setOutput(Output.<CheckChatRoomExistenceOutput>builder().error(error).build());
+            return;
+        }
+        context.setStatus(InputContext.Status.OK);
+        context.setOutput(Output.<CheckChatRoomExistenceOutput>builder()
+                .body(CheckChatRoomExistenceOutput.builder().build())
                 .build());
     }
 

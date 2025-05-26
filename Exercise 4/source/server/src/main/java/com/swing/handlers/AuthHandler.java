@@ -1,4 +1,4 @@
-package com.swing.controllers;
+package com.swing.handlers;
 
 import com.swing.context.InputContext;
 import com.swing.io.Input;
@@ -36,7 +36,7 @@ public class AuthHandler {
         }
         if (Boolean.TRUE.equals(doesExist.getValue())) {
             Output.Error error = Output.Error.builder()
-                    .code(400)
+                    .code(Output.Error.Code.BAD_REQUEST)
                     .message("Username already exists")
                     .build();
             inputContext.setOutput(Output.<RegisterUserOutput>builder().error(error).build());

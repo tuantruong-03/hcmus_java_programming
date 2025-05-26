@@ -14,7 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Log
 public class ChatRoomUserRepository {
@@ -88,6 +90,42 @@ public class ChatRoomUserRepository {
         }
     }
 
+    public Result<List<String>> findChatRoomIdsByUserIds(List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Result.success(Collections.emptyList());
+        }
+        String inClause = userIds.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(", "));
+
+        String sql = "SELECT chat_room_id FROM chatroom_user " +
+                "WHERE user_id IN (" + inClause + ") " +
+                "GROUP BY chat_room_id " +
+                "HAVING COUNT(DISTINCT user_id) = ?";
+
+        List<String> result = new ArrayList<>();
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int index = 1;
+            for (String userId : userIds) {
+                stmt.setString(index++, userId);
+            }
+            stmt.setInt(index, userIds.size());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getString(COLUMN_CHATROOM_ID));
+                }
+            }
+
+        } catch (SQLException e) {
+            return Result.failure(e);
+        }
+
+        return Result.success(result);
+    }
+
+
     public Result<List<ChatRoomUser>> findMany(Query query) {
         var statement = buildStatement(query);
         if (statement.isFailure()) {
@@ -111,7 +149,7 @@ public class ChatRoomUserRepository {
         }
     }
 
-    public Result<Boolean> doesExist(Query query) {
+    public Result<Boolean> existBy(Query query) {
         var result = count(query);
         if (result.isFailure()) {
             return Result.failure(result.getException());
