@@ -73,8 +73,10 @@ public class ClientWorker implements Runnable {
                 }
                 log.info("Received JSON: " + jsonInput);
                 var response = handleJsonInput(jsonInput);
-                if (response.isFailure())
-                    log.warning("failed to handle request: " + response.getException().getMessage());
+                if (response.isFailure()) {
+                    Output<Void> output = Output.<Void>builder().error(Output.Error.interalServerError()).build();
+                    this.write(output);
+                }
                 else this.write(response.getValue());
             } catch (IOException e) {
                 log.warning("Client disconnected or error: " + e.getMessage());
@@ -111,42 +113,56 @@ public class ClientWorker implements Runnable {
                     return handleCreateChatRoomCommand(ctx);
                 }
                 case GET_MY_PROFILE -> {
-                    Input<Void> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    Input<Void> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
                     InputContext<Void, UserOutput> ctx = new InputContext<>(input);
                     return handleGetMyProfileCommand(ctx);
                 }
                 case GET_CHAT_ROOM -> {
-                    Input<GetChatRoomInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    Input<GetChatRoomInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
                     InputContext<GetChatRoomInput, GetChatRoomOutput> ctx = new InputContext<>(input);
                     return handleGetChatRoomCommand(ctx);
                 }
                 case GET_MY_CHAT_ROOMS -> {
-                    Input<GetChatRoomsInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    Input<GetChatRoomsInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
                     InputContext<GetChatRoomsInput, GetChatRoomsOutput> ctx = new InputContext<>(input);
                     return handleGetChatRoomsCommand(ctx);
                 }
                 case CHECK_CHAT_ROOM_EXISTENCE -> {
-                    Input<CheckChatRoomExistenceInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    Input<CheckChatRoomExistenceInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
                     InputContext<CheckChatRoomExistenceInput, CheckChatRoomExistenceOutput> ctx = new InputContext<>(input);
                     return handleCheckChatRoomExistence(ctx);
                 }
+                case GET_MESSAGE -> {
+                    Input<GetMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
+                    InputContext<GetMessageInput, GetMessageOutput> ctx = new InputContext<>(input);
+                    return handleGetMessageComamnd(ctx);
+                }
                 case GET_MESSAGES -> {
-                    Input<GetMessagesInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    Input<GetMessagesInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
                     InputContext<GetMessagesInput, GetMessagesOutput> ctx = new InputContext<>(input);
                     return handleGetMessagesCommand(ctx);
                 }
                 case SEND_MESSAGE -> {
-                    Input<CreateMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    Input<CreateMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
                     InputContext<CreateMessageInput, CreateMessageOutput> ctx = new InputContext<>(input);
                     return handleSendMessageCommand(ctx);
                 }
                 case UPDATE_MESSAGE -> {
-                    Input<UpdateMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    Input<UpdateMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
                     InputContext<UpdateMessageInput, UpdateMessageOutput> ctx = new InputContext<>(input);
                     return handleUpdateMessageCommand(ctx);
                 }
                 case DELETE_MESSAGE -> {
-                    Input<DeleteMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {});
+                    Input<DeleteMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
                     InputContext<DeleteMessageInput, DeleteMessageOutput> ctx = new InputContext<>(input);
                     return handleDeleteMessageCommand(ctx);
                 }
@@ -209,6 +225,7 @@ public class ClientWorker implements Runnable {
         return Result.success(inputContext.getOutput());
 
     }
+
     private Result<Output<?>> handleGetChatRoomsCommand(InputContext<GetChatRoomsInput, GetChatRoomsOutput> inputContext) {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, chatRoomHandler::findMyChatRooms)
@@ -232,17 +249,19 @@ public class ClientWorker implements Runnable {
             CreateMessageInput inputBody = inputContext.getInput().getBody();
             CreateMessageOutput outputBody = inputContext.getOutput().getBody();
             MessageContent.Type type = null;
-            if (inputBody.getContent() != null) {
-                Content c = inputBody.getContent();
-                if (c.getType().equals(Content.Type.TEXT)) {
-                    type = MessageContent.Type.TEXT;
-                } else if (c.getType().equals(Content.Type.FILE)) {
-                    type = MessageContent.Type.FILE;
-                }
+            Content c = inputBody.getContent();
+            if (c.getType().equals(Content.Type.TEXT)) {
+                type = MessageContent.Type.TEXT;
+            } else if (c.getType().equals(Content.Type.FILE)) {
+                type = MessageContent.Type.FILE;
+            }
+            String value = inputBody.getContent().getText();
+            if (inputBody.getContent().getType().equals(Content.Type.FILE)) {
+                value = inputBody.getContent().getFileName();
             }
             MessageContent content = MessageContent.builder()
                     .type(type)
-                    .value(inputBody.getContent() != null ? inputBody.getContent().getValue() : null)
+                    .value(value)
                     .build();
             Event.SendMessagePayload payload = Event.SendMessagePayload.builder()
                     .messageId(outputBody.getMessageId())
@@ -255,6 +274,13 @@ public class ClientWorker implements Runnable {
             Event event = new Event(Event.Type.SEND_MESSAGE, payload);
             emitEvent(event);
         }
+        return Result.success(inputContext.getOutput());
+    }
+
+    private Result<Output<?>> handleGetMessageComamnd(InputContext<GetMessageInput, GetMessageOutput> inputContext) {
+        HandlerRegistry.withInputContext(inputContext)
+                .register(authHandler::authenticate, messageHandler::findOne)
+                .handle();
         return Result.success(inputContext.getOutput());
     }
 
@@ -278,6 +304,8 @@ public class ClientWorker implements Runnable {
                 .handle();
         return Result.success(inputContext.getOutput());
     }
+
+
 
     private void write(Object data) throws IOException {
         String jsonResponse = objectMapper.writeValueAsString(data);

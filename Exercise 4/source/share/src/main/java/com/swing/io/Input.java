@@ -30,6 +30,7 @@ public class Input<T> {
         CHECK_CHAT_ROOM_EXISTENCE,
 
         GET_MESSAGES,
+        GET_MESSAGE,
         SEND_MESSAGE,
         DELETE_MESSAGE,
         UPDATE_MESSAGE,

@@ -75,7 +75,7 @@ public class SocketManager { //NOSONAR
             case Event.Type.SEND_MESSAGE:
                 Event.SendMessagePayload sendMessagePayload = (Event.SendMessagePayload) event.getPayload();
                 for (ClientWorker clientWorker : clients.values()) {
-                    if (sendMessagePayload.getReceiverIds().contains(clientWorker.getUserId())) {
+                    if (sendMessagePayload.getReceiverIds().contains(clientWorker.getUserId()) || clientWorker.getUserId().equals(sendMessagePayload.getSenderId())) {
                         Exception exception = clientWorker.onEvent(event);
                         if (exception != null) {
                             log.warning("SocketManager::onEvent: " + exception.getMessage());

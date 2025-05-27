@@ -1,10 +1,7 @@
 package com.swing.models;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
@@ -23,6 +20,7 @@ public class Message {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Content {
+        @Setter
         private String value;
         private Type type;
         public enum Type {

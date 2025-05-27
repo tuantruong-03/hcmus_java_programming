@@ -24,7 +24,6 @@ public class MessageCaller {
         this.socketConnection = socketConnection;
     }
 
-
     public Result<Output<CreateMessageOutput>> send(CreateMessageInput input) {
         try (Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
              BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
@@ -38,6 +37,26 @@ public class MessageCaller {
             String responseJson = reader.readLine();
             log.info("Server response: " + responseJson);
             Output<CreateMessageOutput> output = mapper.readValue(responseJson,
+                    new TypeReference<>() {});
+            return Result.success(output);
+        } catch (IOException ex) {
+            return Result.failure(ex);
+        }
+    }
+
+    public Result<Output<GetMessageOutput>> getMessage(GetMessageInput input) {
+        try (Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8))) {
+            Input<GetMessageInput> in = CallerUtils.INSTANCE.buildInputWithToken();
+            in.setCommand(Input.Command.GET_MESSAGE);
+            in.setBody(input);
+            String jsonString = mapper.writeValueAsString(in);
+            writer.write(jsonString);
+            writer.newLine();writer.flush();
+            String responseJson = reader.readLine();
+            log.info("Server response: " + responseJson);
+            Output<GetMessageOutput> output = mapper.readValue(responseJson,
                     new TypeReference<>() {});
             return Result.success(output);
         } catch (IOException ex) {

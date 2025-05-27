@@ -8,10 +8,7 @@ import com.swing.event.MessageObserver;
 import com.swing.event.ObserverName;
 import com.swing.io.Output;
 import com.swing.io.chatroom.*;
-import com.swing.io.message.CreateMessageInput;
-import com.swing.io.message.CreateMessageOutput;
-import com.swing.io.message.GetMessagesInput;
-import com.swing.io.message.GetMessagesOutput;
+import com.swing.io.message.*;
 import com.swing.mapper.MessageContentMapper;
 import com.swing.models.ChatRoom;
 import com.swing.models.Message;
@@ -20,6 +17,14 @@ import lombok.extern.java.Log;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
@@ -66,7 +71,7 @@ public abstract class ChatRoomPanel extends JPanel {
         inputPanel.add(sendFileButton, BorderLayout.WEST);
         add(inputPanel, BorderLayout.SOUTH);
         sendButton.addActionListener(e -> sendMessage());
-//        sendFileButton.addActionListener(e -> sendFile());
+        sendFileButton.addActionListener(e -> sendFile());
 
         String chatRoomId = chatRoom.getId();
         if (chatRoom.isNew()) {
@@ -133,6 +138,7 @@ public abstract class ChatRoomPanel extends JPanel {
     }
 
     public void handleReceiveMessage(Message message) {
+        if (Objects.equals(message.getSenderId(), AuthContext.INSTANCE.getPrincipal().getUserId())) return;
         MessagePanel messagePanel = new MessagePanel(message);
         appendMessage(messagePanel);
     }
@@ -174,15 +180,53 @@ public abstract class ChatRoomPanel extends JPanel {
     }
 
 
-//    private void sendFile() {
-//        JFileChooser fileChooser = new JFileChooser();
-//        fileChooser.setDialogTitle("Select a file to send");
-//        int result = fileChooser.showOpenDialog(this);
-//        if (result == JFileChooser.APPROVE_OPTION) {
-//            File selectedFile = fileChooser.getSelectedFile();
-//            appendMessage("Me: Sent file - " + selectedFile.getName());
-//        }
-//    }
+    private void sendFile() {
+        try {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Select a file to send");
+            int result = fileChooser.showOpenDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                Message.Content content = Message.Content.builder()
+                        .type(Message.Content.Type.FILE)
+                        .value(selectedFile.getName())
+                        .build();
+                Content inputContent = Content.builder()
+                        .type(Content.Type.FILE)
+                        .fileName(selectedFile.getName())
+                        .fileData(Files.readAllBytes(selectedFile.toPath()))
+                        .build();
+                var result2 = messageCaller.send(CreateMessageInput.builder()
+                        .chatRoomId(chatRoom.getId())
+                        .senderId(AuthContext.INSTANCE.getPrincipal().getUserId())
+                        .receiverIds(receiverIds)
+                        .content(inputContent)
+                        .build());
+                if (result2.isFailure()) {
+                    log.warning("ChatRoomPanel::sendMessage: " + result2.getException().getMessage());
+                    return;
+                }
+                var output = result2.getValue();
+                if (output.getError() != null) {
+                    log.warning("ChatRoomPanel::sendMessage: " + output.getError().getMessage());
+                    return;
+                }
+                CreateMessageOutput createMessageOutput = output.getBody();
+                Message message = Message.builder()
+                        .id(createMessageOutput.getMessageId())
+                        .chatRoomId(chatRoom.getId())
+                        .senderId(AuthContext.INSTANCE.getPrincipal().getUserId())
+                        .receiverIds(receiverIds)
+                        .content(content)
+                        .build();
+                MessagePanel messagePanel = new MessagePanel(message);
+                appendMessage(messagePanel);
+                messageField.setText("");
+            }
+        } catch (IOException e) {
+            log.warning("ChatRoomPanel::sendFile: " + e.getMessage());
+        }
+    }
 
     protected void appendMessage(MessagePanel messagePanel) {
         String messageId = messagePanel.getMessage().getId();
@@ -199,20 +243,73 @@ public abstract class ChatRoomPanel extends JPanel {
     @Getter
     public static class MessagePanel extends JPanel {
         private final transient Message message;
+        private final transient MessageCaller messageCaller;
+
         public MessagePanel(Message message) {
+            this.messageCaller = ApplicationContext.getInstance().getMessageCaller();
             this.message = message;
+            String value = message.getContent().getValue();
+            if (message.getContent().getType().equals(Message.Content.Type.FILE)) {
+                Path path = Paths.get(value);
+                String fileName = path.getFileName().toString();
+                value = fileName.substring(fileName.indexOf("_") + 1);
+            }
             boolean isSelf = message.getSenderId().equals(AuthContext.INSTANCE.getPrincipal().getUserId());
             setLayout(new FlowLayout(isSelf ? FlowLayout.RIGHT : FlowLayout.LEFT));
             setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-            JLabel messageLabel = new JLabel(message.getContent().getValue());
-            messageLabel.setOpaque(true);
+            JLabel messageLabel = new JLabel(value);
+            messageLabel.setOpaque(false);
+            messageLabel.setFocusable(false);
             messageLabel.setForeground(Color.BLACK);
             messageLabel.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(Color.GRAY, 1),
                     BorderFactory.createEmptyBorder(5, 10, 5, 10)
             ));
-           add(messageLabel);
-        }
+            add(messageLabel);
 
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent evt) {
+                    if (message.getContent().getType().equals(Message.Content.Type.TEXT)) {
+                        return;
+                    }
+                    var result = messageCaller.getMessage(GetMessageInput.builder()
+                            .messageId(message.getId())
+                            .chatRoomId(message.getChatRoomId())
+                            .build());
+                    if (result.isFailure()) {
+                        log.warning("MessagePanel::mouseClicked: " + result.getException().getMessage());
+                        return;
+                    }
+                    var output = result.getValue();
+                    if (output.getError() != null) {
+                        log.warning("MessagePanel::mouseClicked: " + output.getError().getMessage());
+                        return;
+                    }
+                    Content content = output.getBody().getContent();
+                    String fileName = content.getFileName();
+                    byte[] fileData = content.getFileData();
+                    JFileChooser fileChooser = new JFileChooser();
+                    fileChooser.setSelectedFile(new File(fileName));
+                    int userSelection = fileChooser.showSaveDialog(MessagePanel.this);
+
+                    if (userSelection == JFileChooser.APPROVE_OPTION) {
+                        File saveFile = fileChooser.getSelectedFile();
+                        try (FileOutputStream fos = new FileOutputStream(saveFile)) {
+                            fos.write(fileData);
+                            JOptionPane.showMessageDialog(MessagePanel.this,
+                                    "File saved to:\n" + saveFile.getAbsolutePath(),
+                                    "Download Complete",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                        } catch (IOException ex) {
+                            JOptionPane.showMessageDialog(MessagePanel.this,
+                                    "Failed to save file: " + ex.getMessage(),
+                                    "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
+            });
+        }
     }
 }

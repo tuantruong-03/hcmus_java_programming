@@ -14,8 +14,12 @@ import com.swing.repository.ChatRoomRepository;
 import com.swing.repository.ChatRoomUserRepository;
 import com.swing.repository.MessageRepository;
 import com.swing.types.Result;
+import com.swing.utils.FileUtils;
 import lombok.extern.java.Log;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +47,7 @@ public class MessageHandler {
             if (result1.isFailure()) {
                 log.warning("failed to create message: " + result1.getException().getMessage());
                 Output.Error error = Output.Error.interalServerError();
+                context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
                 context.setOutput(Output.<CreateMessageOutput>builder().error(error).build());
                 return;
             }
@@ -50,6 +55,7 @@ public class MessageHandler {
             if (result2.isFailure()) {
                 log.warning("failed to create message: " + result2.getException().getMessage());
                 Output.Error error = Output.Error.interalServerError();
+                context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
                 context.setOutput(Output.<CreateMessageOutput>builder().error(error).build());
                 return;
             }
@@ -57,6 +63,20 @@ public class MessageHandler {
         }
         Content content = body.getContent();
         Message.Content messageContent = MessageContentMapper.fromIOToModel(content);
+        if (content.getType() == Content.Type.FILE ) {
+            String fileName = body.getContent().getFileName();
+            byte[] fileData = body.getContent().getFileData();
+            String path = String.format("files/chat_rooms/%s/%s_%s", chatRoomId  , System.currentTimeMillis(), fileName);
+            var result = FileUtils.store(fileData, path);
+            if (result.isFailure()) {
+                log.warning("failed to create message: " + result.getException().getMessage());
+                Output.Error error = Output.Error.interalServerError();
+                context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
+                context.setOutput(Output.<CreateMessageOutput>builder().error(error).build());
+                return;
+            }
+            messageContent.setValue(path);
+        }
         Message message = Message.builder()
                 .id(UUID.randomUUID().toString())
                 .chatRoomId(chatRoomId)
@@ -67,6 +87,7 @@ public class MessageHandler {
         if (result.isFailure()) {
             log.warning("failed to create message: " + result.getException().getMessage());
             Output.Error error = Output.Error.interalServerError();
+            context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
             context.setOutput(Output.<CreateMessageOutput>builder().error(error).build());
             return;
         }
@@ -114,6 +135,47 @@ public class MessageHandler {
                 .build());
     }
 
+    public void findOne(InputContext<GetMessageInput, GetMessageOutput> context) {
+        Input<GetMessageInput> input = context.getInput();
+        GetMessageInput body = input.getBody();
+        var result = messageRepository.findOne(MessageRepository.Query.builder()
+                .messageId(body.getMessageId())
+                .chatRoomId(body.getChatRoomId())
+                .build());
+        if (result.isFailure()) {
+            log.warning("MessageHandler::findOne: " + result.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
+            context.setOutput(Output.<GetMessageOutput>builder().error(error).build());
+        }
+        Message message = result.getValue();
+        Content content = MessageContentMapper.fromModelToIO(message.getContent());
+        if (content.getType() == Content.Type.FILE) {
+            try {
+                String path = message.getContent().getValue();
+                Path p = Paths.get(path);
+                String fullFileName = p.getFileName().toString();
+                String fileName = fullFileName.substring(fullFileName.indexOf("_") + 1);
+                byte[] fileData = FileUtils.readBytes(path);
+                content.setFileData(fileData);
+                content.setFileName(fileName);
+            } catch (IOException e) {
+                log.warning("MessageHandler::findOne: " + e.getMessage());
+                Output.Error error = Output.Error.interalServerError();
+                context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
+                context.setOutput(Output.<GetMessageOutput>builder().error(error).build());
+                return;
+            }
+        }
+        GetMessageOutput output = GetMessageOutput.builder()
+                .messageId(body.getMessageId())
+                .chatRoomId(body.getChatRoomId())
+                .content(content)
+                .build();
+        context.setStatus(InputContext.Status.OK);
+        context.setOutput(Output.<GetMessageOutput>builder().body(output).build());
+    }
+
     public void findMany(InputContext<GetMessagesInput, GetMessagesOutput> context) {
         Input<GetMessagesInput> input = context.getInput();
         GetMessagesInput body = input.getBody();
@@ -125,6 +187,7 @@ public class MessageHandler {
         if (result.isFailure()) {
             log.warning("MessageHandler::findMany: " + result.getException().getMessage());
             Output.Error error = Output.Error.interalServerError();
+            context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
             context.setOutput(Output.<GetMessagesOutput>builder().error(error).build());
             return;
         }
@@ -162,6 +225,7 @@ public class MessageHandler {
         if (result.isFailure()) {
             log.warning("MessageHandler::update: " + result.getException().getMessage());
             Output.Error error = Output.Error.interalServerError();
+            context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
             context.setOutput(Output.<UpdateMessageOutput>builder().error(error).build());
             return;
         }
@@ -183,6 +247,7 @@ public class MessageHandler {
         if (result.isFailure()) {
             log.warning("MessageHandler::delete: " + result.getException().getMessage());
             Output.Error error = Output.Error.interalServerError();
+            context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
             context.setOutput(Output.<DeleteMessageOutput>builder().error(error).build());
             return;
         }

@@ -49,6 +49,6 @@ public class InputContext<I, O> {
 
     public enum Status {
         OK,
-        ABORTED,
+        INTERNAL_SERVER_ERROR,
     }
 }

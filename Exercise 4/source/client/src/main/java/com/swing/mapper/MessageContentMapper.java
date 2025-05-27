@@ -32,7 +32,7 @@ public class MessageContentMapper {
         }
         return Content.builder()
                 .type(type)
-                .value(content.getValue())
+                .text(content.getValue())
                 .build();
     }
 
@@ -47,7 +47,7 @@ public class MessageContentMapper {
         }
         return Message.Content.builder()
                 .type(type)
-                .value(content.getValue())
+                .value(content.getText())
                 .build();
     }
 }
