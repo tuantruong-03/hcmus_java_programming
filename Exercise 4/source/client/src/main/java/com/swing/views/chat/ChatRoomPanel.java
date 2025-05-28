@@ -363,7 +363,9 @@ public abstract class ChatRoomPanel extends JPanel {
                     }
                 });
                 if (!message.isDeleted()) {
-                    messageContainer.add(editButton);
+                    if (message.getContent().getType().equals(Message.Content.Type.TEXT)) {
+                        messageContainer.add(editButton);
+                    }
                     messageContainer.add(deleteButton);
                 }
             }
