@@ -65,6 +65,8 @@ public class Event {
     public static class DeleteMessagePayload {
         private String messageId;
         private String chatRoomId;
+        private String senderId;
+        private List<String> receiverIds;
     }
 
     @Getter
@@ -75,5 +77,8 @@ public class Event {
         private String messageId;
         private String chatRoomId;
         private MessageContent content;
+        private String senderId;
+        private List<String> receiverIds;
+
     }
 }

@@ -17,8 +17,6 @@ import com.swing.repository.UserRepository;
 import lombok.Getter;
 import lombok.extern.java.Log;
 
-import java.io.InputStream;
-import java.util.Properties;
 
 @Getter
 @Log
@@ -36,46 +34,23 @@ public class ApplicationContext {
     private MessageHandler messageHandler;
     private EventPublisher eventPublisher;
 
-    private ApplicationContext() {}
+    private ApplicationContext() {
+    }
 
-    public static void init() throws RuntimeException {
+    public static void init(Database database) throws RuntimeException {
         context = new ApplicationContext();
+        context.objectMapper = new ObjectMapper();
+        context.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        context.userRepository = new UserRepository(database);
+        context.chatRoomRepository = new ChatRoomRepository(database);
+        context.chatRoomUserRepository = new ChatRoomUserRepository(database);
+        context.messageRepository = new MessageRepository(database);
+        context.authHandler = new AuthHandler(context.userRepository);
+        context.chatRoomHandler = new ChatRoomHandler(context.chatRoomRepository, context.chatRoomUserRepository, context.userRepository);
+        context.userHandler = new UserHandler(context.userRepository);
+        context.messageHandler = new MessageHandler(context.messageRepository, context.chatRoomRepository, context.chatRoomUserRepository);
+        log.info("Application context initialized successfully.");
 
-        try (InputStream input = Database.class.getClassLoader().getResourceAsStream("application.properties")) {
-            Properties props = new Properties();
-            if (input == null) {
-                throw new RuntimeException("Unable to find application.properties");
-            }
-
-            props.load(input);
-            String url = props.getProperty("jdbc.url");
-            String database = props.getProperty("jdbc.database");
-            String user = props.getProperty("jdbc.user");
-            String password = props.getProperty("jdbc.password");
-            String driver = props.getProperty("jdbc.driver");
-            Database.ConnectionOptions options = new Database.ConnectionOptions(
-                    driver,
-                    url,
-                    database,
-                    user,
-                    password
-            );
-            Database db = new Database(options);
-            context.objectMapper = new ObjectMapper();
-            context.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-            context.userRepository = new UserRepository(db);
-            context.chatRoomRepository = new ChatRoomRepository(db);
-            context.chatRoomUserRepository = new ChatRoomUserRepository(db);
-            context.messageRepository = new MessageRepository(db);
-            context.authHandler = new AuthHandler(context.userRepository);
-            context.chatRoomHandler = new ChatRoomHandler(context.chatRoomRepository, context.chatRoomUserRepository, context.userRepository);
-            context.userHandler = new UserHandler(context.userRepository);
-            context.messageHandler = new MessageHandler(context.messageRepository, context.chatRoomRepository, context.chatRoomUserRepository);
-            log.info("Application context initialized successfully.");
-        } catch (Exception e) {
-            log.warning(e.getMessage());
-            throw new RuntimeException("Failed to initialize ApplicationContext", e);
-        }
     }
 
     public static ApplicationContext getInstance() {

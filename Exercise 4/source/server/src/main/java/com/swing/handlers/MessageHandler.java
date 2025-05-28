@@ -243,6 +243,25 @@ public class MessageHandler {
                 .messageId(body.getMessageId())
                 .chatRoomId(body.getChatRoomId())
                 .build();
+        var findResult = messageRepository.findOne(query);
+        if (findResult.isFailure()) {
+            log.warning("MessageHandler::delete: " + findResult.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
+            context.setOutput(Output.<DeleteMessageOutput>builder().error(error).build());
+            return;
+        }
+        Message message = findResult.getValue();
+        if (message.getContent().getType().equals(Content.Type.FILE)) {
+            var deleteFileResult = FileUtils.delete(message.getContent().getValue());
+            if (deleteFileResult.isFailure()) {
+                log.warning("MessageHandler::delete: " + deleteFileResult.getException().getMessage());
+                Output.Error error = Output.Error.interalServerError();
+                context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
+                context.setOutput(Output.<DeleteMessageOutput>builder().error(error).build());
+                return;
+            }
+        }
         var result = messageRepository.delete(query);
         if (result.isFailure()) {
             log.warning("MessageHandler::delete: " + result.getException().getMessage());

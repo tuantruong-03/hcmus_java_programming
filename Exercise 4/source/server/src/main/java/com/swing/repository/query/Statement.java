@@ -65,7 +65,7 @@ public class Statement {
         }
         StringBuilder sql = new StringBuilder("UPDATE ").append(table).append(" SET ");
         String setClause = columnsToUpdate.stream()
-                .map(column -> column + " = ?")
+                .map(c -> c.getKey() + " = ?")
                 .collect(Collectors.joining(", "));
         sql.append(setClause);
         sql.append(prepareConditions(false));
@@ -81,7 +81,7 @@ public class Statement {
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         int parameterIndex = 1;
         for (Map.Entry<String, Object> ctu : columnsToUpdate) {
-            preparedStatement.setObject(parameterIndex++, ctu.getKey());
+            preparedStatement.setObject(parameterIndex++, ctu.getValue());
         }
         for (Operator operator : operators) {
             Object value = operator.getValue();

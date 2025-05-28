@@ -100,7 +100,11 @@ public class MessageRepository {
         boolean isUpdated = false;
         if (payload.content != null) {
             isUpdated = true;
-            statement.setColumn(COLUMN_CONTENT, payload.getContent());
+            try {
+                statement.setColumn(COLUMN_CONTENT, objectMapper.writeValueAsString(payload.content));
+            } catch (JsonProcessingException e) {
+                return Result.failure(new Exception("failed to write Message#content as string by object mapper: " + e.getMessage()));
+            }
         }
         if (!isUpdated) {
             return Result.failure(new Exception("update payload contains nothing"));

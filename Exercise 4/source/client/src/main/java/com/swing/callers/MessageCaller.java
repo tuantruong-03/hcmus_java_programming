@@ -44,7 +44,7 @@ public class MessageCaller {
         }
     }
 
-    public Result<Output<GetMessageOutput>> getMessage(GetMessageInput input) {
+    public Result<Output<GetMessageOutput>> getOne(GetMessageInput input) {
         try (Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
              BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8))) {
@@ -64,7 +64,7 @@ public class MessageCaller {
         }
     }
 
-    public Result<Output<GetMessagesOutput>> getMessages(GetMessagesInput input) {
+    public Result<Output<GetMessagesOutput>> getMany(GetMessagesInput input) {
         try (Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
              BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8))) {
@@ -109,7 +109,7 @@ public class MessageCaller {
              BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8))) {
             Input<DeleteMessageInput> in = CallerUtils.INSTANCE.buildInputWithToken();
-            in.setCommand(Input.Command.UPDATE_MESSAGE);
+            in.setCommand(Input.Command.DELETE_MESSAGE);
             in.setBody(input);
             String jsonString = mapper.writeValueAsString(in);
             writer.write(jsonString);

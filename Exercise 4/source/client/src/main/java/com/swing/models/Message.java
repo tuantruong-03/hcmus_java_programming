@@ -13,12 +13,17 @@ import java.util.List;
 public class Message {
     private String id;
     private String chatRoomId;
+    @Setter
     private Content content;
     private String senderId;
     private String senderName;
     private List<String> receiverIds;
     private Date createdAt;
     private Date updatedAt;
+    @Setter
+    private boolean isDeleted;
+    @Setter
+    private boolean isEdited;
 
     @Builder
     @Getter

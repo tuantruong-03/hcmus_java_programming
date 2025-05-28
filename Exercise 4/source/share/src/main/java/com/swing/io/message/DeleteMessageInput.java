@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @Builder
 @NoArgsConstructor
@@ -12,4 +14,6 @@ import lombok.NoArgsConstructor;
 public class DeleteMessageInput {
     private String chatRoomId;
     private String messageId;
+    private String senderId;
+    private List<String> receiverIds;
 }

@@ -52,6 +52,8 @@ public class MessageObserver implements EventObserver {
                         .id(ump.getMessageId())
                         .chatRoomId(ump.getChatRoomId())
                         .content(MessageContentMapper.fromEventToModel(ump.getContent()))
+                        .senderId(ump.getSenderId())
+                        .receiverIds(ump.getReceiverIds())
                         .build();
                 for (Consumer<Message> consumer : updatedMessageConsumers) {
                     consumer.accept(message);
@@ -62,6 +64,8 @@ public class MessageObserver implements EventObserver {
                 this.message = Message.builder()
                         .id(dmp.getMessageId())
                         .chatRoomId(dmp.getChatRoomId())
+                        .senderId(dmp.getSenderId())
+                        .receiverIds(dmp.getReceiverIds())
                         .build();
                 for (Consumer<Message> consumer : deletedMessageConsumers) {
                     consumer.accept(message);

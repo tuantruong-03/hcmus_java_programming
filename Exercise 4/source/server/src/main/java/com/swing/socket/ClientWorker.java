@@ -140,7 +140,7 @@ public class ClientWorker implements Runnable {
                     Input<GetMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
                     });
                     InputContext<GetMessageInput, GetMessageOutput> ctx = new InputContext<>(input);
-                    return handleGetMessageComamnd(ctx);
+                    return handleGetMessageCommand(ctx);
                 }
                 case GET_MESSAGES -> {
                     Input<GetMessagesInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
@@ -277,7 +277,7 @@ public class ClientWorker implements Runnable {
         return Result.success(inputContext.getOutput());
     }
 
-    private Result<Output<?>> handleGetMessageComamnd(InputContext<GetMessageInput, GetMessageOutput> inputContext) {
+    private Result<Output<?>> handleGetMessageCommand(InputContext<GetMessageInput, GetMessageOutput> inputContext) {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, messageHandler::findOne)
                 .handle();
@@ -295,6 +295,33 @@ public class ClientWorker implements Runnable {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, messageHandler::update)
                 .handle();
+        if (inputContext.getStatus().equals(InputContext.Status.OK)) {
+            UpdateMessageInput inputBody = inputContext.getInput().getBody();
+            MessageContent.Type type = null;
+            Content c = inputBody.getContent();
+            if (c.getType().equals(Content.Type.TEXT)) {
+                type = MessageContent.Type.TEXT;
+            } else if (c.getType().equals(Content.Type.FILE)) {
+                type = MessageContent.Type.FILE;
+            }
+            String value = inputBody.getContent().getText();
+            if (inputBody.getContent().getType().equals(Content.Type.FILE)) {
+                value = inputBody.getContent().getFileName();
+            }
+            MessageContent content = MessageContent.builder()
+                    .type(type)
+                    .value(value)
+                    .build();
+            Event.UpdateMessagePayload payload = Event.UpdateMessagePayload.builder()
+                    .messageId(inputBody.getMessageId())
+                    .chatRoomId(inputBody.getChatRoomId())
+                    .content(content)
+                    .senderId(inputBody.getSenderId())
+                    .receiverIds(inputBody.getReceiverIds())
+                    .build();
+            Event event = new Event(Event.Type.UPDATE_MESSAGE, payload);
+            emitEvent(event);
+        }
         return Result.success(inputContext.getOutput());
     }
 
@@ -302,10 +329,19 @@ public class ClientWorker implements Runnable {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, messageHandler::delete)
                 .handle();
+        if (inputContext.getStatus().equals(InputContext.Status.OK)) {
+            DeleteMessageInput inputBody = inputContext.getInput().getBody();
+            Event.DeleteMessagePayload payload = Event.DeleteMessagePayload.builder()
+                    .messageId(inputBody.getMessageId())
+                    .chatRoomId(inputBody.getChatRoomId())
+                    .senderId(inputBody.getSenderId())
+                    .receiverIds(inputBody.getReceiverIds())
+                    .build();
+            Event event = new Event(Event.Type.DELETE_MESSAGE, payload);
+            emitEvent(event);
+        }
         return Result.success(inputContext.getOutput());
     }
-
-
 
     private void write(Object data) throws IOException {
         String jsonResponse = objectMapper.writeValueAsString(data);
@@ -320,7 +356,7 @@ public class ClientWorker implements Runnable {
 
     public Exception onEvent(Event event) {
         switch (event.getType()) {
-            case USER_LOGIN, SEND_MESSAGE:
+            case USER_LOGIN, SEND_MESSAGE, UPDATE_MESSAGE, DELETE_MESSAGE:
                 return eventPublisher.publish(event);
             case USER_LOGOUT:
                 break;

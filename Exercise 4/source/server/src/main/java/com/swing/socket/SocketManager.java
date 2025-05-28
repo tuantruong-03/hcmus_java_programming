@@ -83,6 +83,28 @@ public class SocketManager { //NOSONAR
                     }
                 }
                 break;
+            case Event.Type.UPDATE_MESSAGE:
+                Event.UpdateMessagePayload updateMessagePayload = (Event.UpdateMessagePayload) event.getPayload();
+                for (ClientWorker clientWorker : clients.values()) {
+                    if (updateMessagePayload.getReceiverIds().contains(clientWorker.getUserId()) || clientWorker.getUserId().equals(updateMessagePayload.getSenderId())) {
+                        Exception exception = clientWorker.onEvent(event);
+                        if (exception != null) {
+                            log.warning("SocketManager::onEvent: " + exception.getMessage());
+                        }
+                    }
+                }
+                break;
+            case Event.Type.DELETE_MESSAGE:
+                Event.DeleteMessagePayload deleteMessagePayload = (Event.DeleteMessagePayload) event.getPayload();
+                for (ClientWorker clientWorker : clients.values()) {
+                    if (deleteMessagePayload.getReceiverIds().contains(clientWorker.getUserId()) || clientWorker.getUserId().equals(deleteMessagePayload.getSenderId())) {
+                        Exception exception = clientWorker.onEvent(event);
+                        if (exception != null) {
+                            log.warning("SocketManager::onEvent: " + exception.getMessage());
+                        }
+                    }
+                }
+                break;
             default:
                 break;
         }
