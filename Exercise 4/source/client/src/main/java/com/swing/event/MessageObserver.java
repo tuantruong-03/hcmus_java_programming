@@ -13,19 +13,19 @@ import java.util.function.Consumer;
 
 public class MessageObserver implements EventObserver {
     @Getter
-    private final String name;
+    private final String chatRoomId;
     private final List<Consumer<Message>> receivedMessageConsumers;
     private final List<Consumer<Message>> deletedMessageConsumers;
     private final List<Consumer<Message>> updatedMessageConsumers;
     private Message message;
     private final ObjectMapper objectMapper;
 
-    public MessageObserver(String name) {
+    public MessageObserver(String chatRoomId) {
+        this.chatRoomId = chatRoomId;
         this.message = new Message();
         this.receivedMessageConsumers = new ArrayList<>();
         this.deletedMessageConsumers = new ArrayList<>();
         this.updatedMessageConsumers = new ArrayList<>();
-        this.name = name;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -34,6 +34,7 @@ public class MessageObserver implements EventObserver {
         switch (event.getType()) {
             case SEND_MESSAGE:
                 Event.SendMessagePayload smp =  objectMapper.convertValue(event.getPayload(), Event.SendMessagePayload.class);
+                if (!this.chatRoomId.equals(smp.getChatRoomId())) return;
                 this.message = Message.builder()
                         .id(smp.getMessageId())
                         .chatRoomId(smp.getChatRoomId())
@@ -48,6 +49,7 @@ public class MessageObserver implements EventObserver {
                 break;
             case UPDATE_MESSAGE:
                 Event.UpdateMessagePayload ump =  objectMapper.convertValue(event.getPayload(), Event.UpdateMessagePayload.class);
+                if (!this.chatRoomId.equals(ump.getChatRoomId())) return;
                 this.message = Message.builder()
                         .id(ump.getMessageId())
                         .chatRoomId(ump.getChatRoomId())
@@ -61,6 +63,7 @@ public class MessageObserver implements EventObserver {
                 break;
             case DELETE_MESSAGE:
                 Event.DeleteMessagePayload dmp =  objectMapper.convertValue(event.getPayload(), Event.DeleteMessagePayload.class);
+                if (!this.chatRoomId.equals(dmp.getChatRoomId())) return;
                 this.message = Message.builder()
                         .id(dmp.getMessageId())
                         .chatRoomId(dmp.getChatRoomId())
@@ -73,6 +76,11 @@ public class MessageObserver implements EventObserver {
                 break;
         }
 
+    }
+
+    @Override
+    public String getName() {
+        return ObserverName.MESSAGE_OBSERVER + "_" + chatRoomId;
     }
 
     public void addReceivedMessageConsumer(Consumer<Message> consumer) {

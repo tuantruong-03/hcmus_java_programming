@@ -65,12 +65,13 @@ class LoginPanel extends JPanel {
         Result<Output<LoginUserOutput>> loginResult = authCaller.login(buildRequestResult.getValue());
         if (loginResult.isFailure()) {
             log.warning("failed to login: " + loginResult.getException());
+            errorLabel.setText("Login failed, please try again" );
             return;
         }
         Output<LoginUserOutput> output = loginResult.getValue();
         if (output.getError() != null) {
             log.warning("failed to login: " + output.getError().getMessage());
-            errorLabel.setText("Login failed, please try again" );
+            errorLabel.setText("Username or password is incorrect");
             return;
         }
         LoginUserOutput loginUserOutput = output.getBody();

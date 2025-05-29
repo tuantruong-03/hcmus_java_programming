@@ -20,8 +20,12 @@ public class EventDispatcher implements Runnable {
         this.mapper = new ObjectMapper();
     }
 
-    public void addObserver(EventObserver observer) {
+    public EventObserver addObserver(EventObserver observer) {
+        if (observers.containsKey(observer.getName())) {
+            return observers.get(observer.getName());
+        }
         observers.put(observer.getName(), observer);
+        return observer;
     }
 
     public void removeObserver(String name) {
@@ -46,12 +50,13 @@ public class EventDispatcher implements Runnable {
                         userObserver.onEvent(event);
                     }
                     break;
-                default:
-                    break;
                 case CREATE_CHAT_ROOM:
                     if (observer instanceof ChatRoomObserver chatRoomObserver) {
                         chatRoomObserver.onEvent(event);
                     }
+                    break;
+                default:
+                    break;
             }
         }
     }

@@ -37,8 +37,8 @@ public class MainChatPanel extends JPanel {
     public MainChatPanel(MainFrame parent) {
         this.parent = parent;
         this.chatRoomCaller = ApplicationContext.getInstance().getChatRoomCaller();
-        this.userObserver = new UserObserver(ObserverName.UserLoginObserver);
-        this.chatRoomObserver = new ChatRoomObserver(ObserverName.ChatRoomObserver);
+        this.userObserver = new UserObserver(ObserverName.USER_LOGIN_OBSERVER);
+        this.chatRoomObserver = new ChatRoomObserver(ObserverName.CHAT_ROOM_OBSERVER);
         render();
         this.userObserver.addOtherLoginConsumer(this::handleOtherUserLogin);
         this.chatRoomObserver.addCreatedChatRoomConsumer(this::handleCreatedChatRoom);

@@ -5,7 +5,6 @@ import com.swing.callers.MessageCaller;
 import com.swing.context.ApplicationContext;
 import com.swing.context.AuthContext;
 import com.swing.event.MessageObserver;
-import com.swing.event.ObserverName;
 import com.swing.io.Output;
 import com.swing.io.chatroom.*;
 import com.swing.io.message.*;
@@ -49,7 +48,7 @@ public abstract class ChatRoomPanel extends JPanel {
         this.chatRoomCaller = ApplicationContext.getInstance().getChatRoomCaller();
         this.messageCaller = ApplicationContext.getInstance().getMessageCaller();
         render();
-        this.messageObserver = new MessageObserver(ObserverName.MessageObserver);
+        this.messageObserver = new MessageObserver(this.chatRoom.getId());
         this.messageObserver.addReceivedMessageConsumer(this::handleReceiveMessage);
         this.messageObserver.addUpdatedMessageConsumer(this::handleUpdatedMessage);
         this.messageObserver.addDeletedMessageConsumer(this::handleDeletedMessage);
@@ -141,6 +140,7 @@ public abstract class ChatRoomPanel extends JPanel {
 
     public void handleReceiveMessage(Message message) {
         if (Objects.equals(message.getSenderId(), AuthContext.INSTANCE.getPrincipal().getUserId())) return;
+        if (messagePanelMap.containsKey(message.getId())) return;
         message.setSenderName(memberMap.get(message.getSenderId()).getNickname());
         message.setGroup(chatRoom.isGroup());
         appendMessage(message);
