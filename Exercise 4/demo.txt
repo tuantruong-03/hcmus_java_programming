@@ -1,0 +1,8 @@
+Thông tin kết nối Database:
+- DB Server URL: jdbc:mysql://localhost:3306
+- DB Name: chat_app
+- Username: root
+- Password: Tuantruong131203
+Thông tin kết nối server:
+- Host: 127.0.0.1
+- Port: 8080
