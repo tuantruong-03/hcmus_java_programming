@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-@Getter
 public class MessageObserver implements EventObserver {
+    @Getter
     private final String name;
     private final List<Consumer<Message>> receivedMessageConsumers;
     private final List<Consumer<Message>> deletedMessageConsumers;

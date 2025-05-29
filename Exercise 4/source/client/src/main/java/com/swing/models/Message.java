@@ -16,6 +16,7 @@ public class Message {
     @Setter
     private Content content;
     private String senderId;
+    @Setter
     private String senderName;
     private List<String> receiverIds;
     private Date createdAt;
@@ -24,6 +25,8 @@ public class Message {
     private boolean isDeleted;
     @Setter
     private boolean isEdited;
+    @Setter
+    private boolean isGroup;
 
     @Builder
     @Getter

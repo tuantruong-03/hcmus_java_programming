@@ -3,12 +3,11 @@ package com.swing.views.chat;
 import com.swing.callers.ChatRoomCaller;
 import com.swing.context.ApplicationContext;
 import com.swing.context.AuthContext;
+import com.swing.event.ChatRoomObserver;
 import com.swing.event.ObserverName;
-import com.swing.event.UserLoginObserver;
+import com.swing.event.UserObserver;
 import com.swing.io.Output;
-import com.swing.io.chatroom.CheckChatRoomExistenceInput;
-import com.swing.io.chatroom.GetChatRoomsInput;
-import com.swing.io.chatroom.GetChatRoomsOutput;
+import com.swing.io.chatroom.*;
 import com.swing.models.ChatRoom;
 import com.swing.models.User;
 import com.swing.views.MainFrame;
@@ -16,28 +15,35 @@ import lombok.extern.java.Log;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Log
 public class MainChatPanel extends JPanel {
-    private JList<String> userList;
-    private DefaultListModel<String> userListModel;
+    private JList<ChatRoom> chatRoomList;
+    private DefaultListModel<ChatRoom> chatRoomListModel;
     private JButton createGroupButton, logoutButton;
     private JPanel chatPanelContainer, chatListPanel;
     private CardLayout chatCardLayout;
-    private List<ChatRoomPanel> chatRoomPanels;
+    private Map<String, ChatRoomPanel> chatRoomPanelMap;
+    private final MainFrame parent;
 
     private final transient ChatRoomCaller chatRoomCaller;
-    private final transient UserLoginObserver userLoginObserver;
+    private final transient UserObserver userObserver;
+    private final transient ChatRoomObserver chatRoomObserver;
 
 
     public MainChatPanel(MainFrame parent) {
-        chatRoomCaller = ApplicationContext.getInstance().getChatRoomCaller();
-        userLoginObserver = new UserLoginObserver(ObserverName.UserLoginObserver);
+        this.parent = parent;
+        this.chatRoomCaller = ApplicationContext.getInstance().getChatRoomCaller();
+        this.userObserver = new UserObserver(ObserverName.UserLoginObserver);
+        this.chatRoomObserver = new ChatRoomObserver(ObserverName.ChatRoomObserver);
         render();
-        userLoginObserver.register(this::handleOtherUserLogin);
-        ApplicationContext.getInstance().getEventDispatcher().addObserver(userLoginObserver);
+        this.userObserver.addOtherLoginConsumer(this::handleOtherUserLogin);
+        this.chatRoomObserver.addCreatedChatRoomConsumer(this::handleCreatedChatRoom);
+        ApplicationContext.getInstance().getEventDispatcher().addObserver(userObserver);
+        ApplicationContext.getInstance().getEventDispatcher().addObserver(chatRoomObserver);
         setVisible(true);
     }
 
@@ -63,14 +69,6 @@ public class MainChatPanel extends JPanel {
                 return;
             }
         }
-        for (ChatRoomPanel chatRoomPanel : chatRoomPanels) {
-            ChatRoom chatRoom = chatRoomPanel.getChatRoom();
-            List<String> userIds = chatRoom.getUserIds();
-            if (!chatRoom.isGroup() && userIds.contains(user.getId())) {
-                chatRoomExists = true;
-                break;
-            }
-        }
         if (chatRoomExists) return;
         AuthContext.Principal principal = AuthContext.INSTANCE.getPrincipal();
         List<String> userIds = List.of(user.getId(), principal.getUserId());
@@ -80,11 +78,35 @@ public class MainChatPanel extends JPanel {
                 .isGroup(false)
                 .isNew(true)
                 .build();
-        ChatRoomPanel chatRoomPanel = new UserChatRoomPanel(chatRoom);
-        chatRoomPanels.add(chatRoomPanel);
-        // If chat room is not group, chatRoomName will be the name of the other user
-        chatPanelContainer.add(chatRoomPanel, user.getName());
-        userListModel.addElement(user.getName());
+        List<String> otherUserIds = List.of(user.getId());
+        var inputResult = CreateChatRoomInput.builder()
+                .otherUserIds(otherUserIds.stream().toList().toArray(new String[0]))
+                .isGroup(false)
+                .build();
+        if (inputResult.isFailure()) {
+            log.warning("ChatRoomPanel::renderWithData: " + inputResult.getException().getMessage());
+            return;
+        }
+        var result1 = chatRoomCaller.createOne(inputResult.getValue());
+        if (result1.isFailure()) {
+            log.warning("ChatRoomPanel::renderWithData: " + result.getException().getMessage());
+            return;
+        }
+        Output<CreateChatRoomOutput> output1 = result1.getValue();
+        if (output1.getError() != null) {
+            log.warning("ChatRoomPanel::renderWithData: " + result.getException().getMessage());
+            return;
+        }
+        String chatRoomId = output1.getBody().getChatRoomId();
+        chatRoom.setId(chatRoomId);
+        addChatRoom(chatRoom);
+        revalidate();
+        repaint();
+    }
+
+    public void handleCreatedChatRoom(ChatRoom chatRoom) {
+        if (chatRoomPanelMap.containsKey(chatRoom.getId())) return;
+        addChatRoom(chatRoom);
         revalidate();
         repaint();
     }
@@ -93,19 +115,19 @@ public class MainChatPanel extends JPanel {
         setSize(800, 600);
         setLayout(new BorderLayout());
 
-        userListModel = new DefaultListModel<>();
-        userList = new JList<>(userListModel);
-        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        userList.addListSelectionListener(e -> {
+        chatRoomListModel = new DefaultListModel<>();
+        chatRoomList = new JList<>(chatRoomListModel);
+        chatRoomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        chatRoomList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                String selectedChat = userList.getSelectedValue();
-                openChatPanel(selectedChat);
+                ChatRoom selectedChat = chatRoomList.getSelectedValue();
+                openChatPanel(selectedChat.getId());
             }
         });
         chatListPanel = new JPanel(new BorderLayout());
         chatCardLayout = new CardLayout();
         chatPanelContainer = new JPanel(chatCardLayout);
-        chatRoomPanels = new ArrayList<>();
+        chatRoomPanelMap = new HashMap<>();
         GetChatRoomsInput input = GetChatRoomsInput.builder()
                 .limit(100)
                 .page(0)
@@ -127,36 +149,14 @@ public class MainChatPanel extends JPanel {
                         .build())
                 .toList();
         for (ChatRoom chatRoom : chatRooms) {
-            String chatRoomName = chatRoom.getName(); // "Tuan Truong,Jane Bach"
-            if (!chatRoom.isGroup()) {
-                AuthContext.Principal principal = AuthContext.INSTANCE.getPrincipal();
-                String myName = principal.getName(); // "Tuan Truong"
-                StringBuilder stringBuilder = new StringBuilder();
-                String[] names = chatRoomName.split(",");
-                for (String name : names) {
-                    if (!name.trim().equals(myName)) {
-                        stringBuilder.append(name).append(", ");
-                    }
-                }
-                stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());
-                chatRoomName = stringBuilder.toString();
-            }
-            userListModel.addElement(chatRoomName);
-            ChatRoomPanel chatRoomPanel;
-            if (chatRoom.isGroup()) {
-                chatRoomPanel = new UserChatRoomPanel(chatRoom);
-            } else {
-                chatRoomPanel = new GroupChatRoomPanel(chatRoom);
-            }
-            chatRoomPanels.add(chatRoomPanel);
-            // If chat room is not group, chatRoomName will be the name of the other user
-            chatPanelContainer.add(chatRoomPanel, chatRoomPanel.getChatRoomName());
+            addChatRoom(chatRoom);
         }
-
         chatListPanel.setBorder(BorderFactory.createTitledBorder("Conversations"));
-        chatListPanel.add(new JScrollPane(userList), BorderLayout.CENTER);
+        chatListPanel.add(new JScrollPane(chatRoomList), BorderLayout.CENTER);
         JPanel controlPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         createGroupButton = new JButton("Create Group");
+        createGroupButton.addActionListener(e ->
+            new CreateChatRoomDialog(this.parent).setVisible(true));
         logoutButton = new JButton("Logout");
         controlPanel.add(createGroupButton);
         controlPanel.add(logoutButton);
@@ -165,7 +165,33 @@ public class MainChatPanel extends JPanel {
         add(chatPanelContainer, BorderLayout.CENTER);
     }
 
-    public void openChatPanel(String chatRoomName) {
-        chatRoomPanels.stream().filter(cp -> cp.getChatRoomName().equals(chatRoomName)).findFirst().ifPresent(chatRoomPanel -> chatCardLayout.show(chatPanelContainer, chatRoomName));
+    private void addChatRoom(ChatRoom chatRoom) {
+        String chatRoomName = chatRoom.getName(); // "Tuan Truong,Jane Bach"
+        if (!chatRoom.isGroup()) {
+            AuthContext.Principal principal = AuthContext.INSTANCE.getPrincipal();
+            String myName = principal.getName(); // "Tuan Truong"
+            StringBuilder stringBuilder = new StringBuilder();
+            String[] names = chatRoomName.split(",");
+            for (String name : names) {
+                if (!name.trim().equals(myName)) {
+                    stringBuilder.append(name).append(", ");
+                }
+            }
+            stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());
+            chatRoom.setName(stringBuilder.toString());
+        }
+        chatRoomListModel.addElement(chatRoom);
+        ChatRoomPanel chatRoomPanel;
+        if (chatRoom.isGroup()) {
+            chatRoomPanel = new UserChatRoomPanel(chatRoom);
+        } else {
+            chatRoomPanel = new GroupChatRoomPanel(chatRoom);
+        }
+        chatRoomPanelMap.put(chatRoom.getId(), chatRoomPanel);
+        chatPanelContainer.add(chatRoomPanel, chatRoom.getId());
+    }
+
+    public void openChatPanel(String chatRoomId) {
+        chatCardLayout.show(chatPanelContainer, chatRoomId);
     }
 }

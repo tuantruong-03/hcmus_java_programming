@@ -105,6 +105,17 @@ public class SocketManager { //NOSONAR
                     }
                 }
                 break;
+            case Event.Type.CREATE_CHAT_ROOM:
+                Event.CreateChatRoomPayload createChatRoomPayload = (Event.CreateChatRoomPayload) event.getPayload();
+                for (ClientWorker clientWorker : clients.values()) {
+                    if (createChatRoomPayload.getMemberIds().contains(clientWorker.getUserId())) {
+                        Exception exception = clientWorker.onEvent(event);
+                        if (exception != null) {
+                            log.warning("SocketManager::onEvent: " + exception.getMessage());
+                        }
+                    }
+                }
+                break;
             default:
                 break;
         }

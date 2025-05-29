@@ -8,7 +8,7 @@ import com.swing.context.AuthContext;
 import com.swing.io.Output;
 import com.swing.io.user.LoginUserInput;
 import com.swing.io.user.LoginUserOutput;
-import com.swing.io.user.UserOutput;
+import com.swing.io.user.GetUserOutput;
 import com.swing.types.Result;
 import lombok.extern.java.Log;
 
@@ -75,14 +75,14 @@ class LoginPanel extends JPanel {
         }
         LoginUserOutput loginUserOutput = output.getBody();
         CallerUtils.INSTANCE.setToken(loginUserOutput.getToken());
-        Result<Output<UserOutput>> result = userCaller.getMyProfile();
+        Result<Output<GetUserOutput>> result = userCaller.getMyProfile();
         if (result.isFailure()) {
             log.warning("failed to login: " + result.getException().getMessage());
             errorLabel.setText("Login failed, please try again" );
             return;
         }
-        UserOutput userOutput = result.getValue().getBody();
-        AuthContext.Principal principal = new AuthContext.Principal(userOutput.getId(), userOutput.getName(), userOutput.getUsername());
+        GetUserOutput getUserOutput = result.getValue().getBody();
+        AuthContext.Principal principal = new AuthContext.Principal(getUserOutput.getId(), getUserOutput.getName(), getUserOutput.getUsername());
         AuthContext.INSTANCE.setPrincipal(principal);
         Exception exception = ApplicationContext.getInstance().runEventDispatcher();
         if (exception != null) {

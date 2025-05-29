@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Getter
-public class UserLoginObserver implements EventObserver {
+public class UserObserver implements EventObserver {
     private final String name;
     private final List<Consumer<User>> consumers;
     private final ObjectMapper objectMapper;
     private User user;
 
-    public UserLoginObserver(String name) {
+    public UserObserver(String name) {
         this.user = new User();
         this.consumers = new ArrayList<>();
         this.objectMapper = new ObjectMapper();
@@ -37,7 +37,7 @@ public class UserLoginObserver implements EventObserver {
         }
     }
 
-    public void register(Consumer<User> consumer) {
+    public void addOtherLoginConsumer(Consumer<User> consumer) {
         consumers.add(consumer);
     }
 }

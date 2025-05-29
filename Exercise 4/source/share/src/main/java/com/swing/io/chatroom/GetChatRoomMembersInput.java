@@ -1,17 +1,15 @@
-package com.swing.io.user;
-
+package com.swing.io.chatroom;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Builder
+
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserOutput {
-    private String id;
-    private String name;
-    private String username;
+public class GetChatRoomMembersInput {
+    private String chatRoomId;
 }

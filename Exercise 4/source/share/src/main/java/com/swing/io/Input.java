@@ -23,11 +23,13 @@ public class Input<T> {
         KEEP_CONNECTION_ALIVE,
 
         GET_MY_PROFILE,
+        GET_USERS,
 
         CREATE_CHATROOM,
         GET_MY_CHAT_ROOMS,
         GET_CHAT_ROOM,
         CHECK_CHAT_ROOM_EXISTENCE,
+        GET_CHAT_ROOM_MEMBERS,
 
         GET_MESSAGES,
         GET_MESSAGE,

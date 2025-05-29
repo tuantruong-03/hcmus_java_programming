@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swing.context.SocketConnection;
 import com.swing.io.Input;
 import com.swing.io.Output;
-import com.swing.io.user.LoginUserInput;
-import com.swing.io.user.LoginUserOutput;
-import com.swing.io.user.RegisterUserInput;
-import com.swing.io.user.UserOutput;
+import com.swing.io.user.*;
 import com.swing.types.Result;
 import lombok.extern.java.Log;
 
@@ -26,7 +23,7 @@ public class UserCaller {
         this.socketConnection = socketConnection;
     }
 
-    public Result<Output<UserOutput>> getMyProfile() {
+    public Result<Output<GetUserOutput>> getMyProfile() {
         try (Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
              BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8))) {
@@ -37,7 +34,27 @@ public class UserCaller {
             writer.newLine();writer.flush();
             String responseJson = reader.readLine();
             log.info("Server response: " + responseJson);
-            Output<UserOutput> output = mapper.readValue(responseJson,
+            Output<GetUserOutput> output = mapper.readValue(responseJson,
+                    new TypeReference<>() {});
+            return Result.success(output);
+        } catch (IOException ex) {
+            return Result.failure(ex);
+        }
+    }
+
+    public Result<Output<GetUsersOutput>> getMany(GetUsersInput input) {
+        try (Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8))) {
+            Input<GetUsersInput> in = CallerUtils.INSTANCE.buildInputWithToken();
+            in.setCommand(Input.Command.GET_USERS );
+            in.setBody(input);
+            String jsonString = mapper.writeValueAsString(in);
+            writer.write(jsonString);
+            writer.newLine();writer.flush();
+            String responseJson = reader.readLine();
+            log.info("Server response: " + responseJson);
+            Output<GetUsersOutput> output = mapper.readValue(responseJson,
                     new TypeReference<>() {});
             return Result.success(output);
         } catch (IOException ex) {

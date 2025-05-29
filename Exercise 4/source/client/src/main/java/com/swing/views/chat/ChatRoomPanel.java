@@ -37,14 +37,14 @@ public abstract class ChatRoomPanel extends JPanel {
     @Getter
     protected transient ChatRoom chatRoom;
     protected transient List<String> receiverIds;
-    private final Map<String, MessagePanel> messagePanelMap;
+    protected transient Map<String, ChatRoom.Member> memberMap;
+    private Map<String, MessagePanel> messagePanelMap;
 
     protected final transient ChatRoomCaller chatRoomCaller;
     protected final transient MessageCaller messageCaller;
     protected final transient MessageObserver messageObserver;
 
     protected ChatRoomPanel(ChatRoom chatRoom) {
-        this.messagePanelMap = new HashMap<>();
         this.chatRoom = chatRoom;
         this.chatRoomCaller = ApplicationContext.getInstance().getChatRoomCaller();
         this.messageCaller = ApplicationContext.getInstance().getMessageCaller();
@@ -57,6 +57,8 @@ public abstract class ChatRoomPanel extends JPanel {
     }
 
     public void render() {
+        this.messagePanelMap = new HashMap<>();
+        this.memberMap = new HashMap<>();
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createTitledBorder("Chat Area"));
         chatArea = new JPanel();
@@ -76,31 +78,6 @@ public abstract class ChatRoomPanel extends JPanel {
         sendFileButton.addActionListener(e -> sendFile());
 
         String chatRoomId = chatRoom.getId();
-        if (chatRoom.isNew()) {
-            List<String> userIds = chatRoom.getUserIds();
-            List<String> otherUserIds = userIds.stream().
-                    filter(userId -> !userId.equals(AuthContext.INSTANCE.getPrincipal().getUserId())).toList();
-            var inputResult = CreateChatRoomInput.builder()
-                    .otherUserIds(otherUserIds.stream().toList().toArray(new String[0]))
-                    .isGroup(false)
-                    .build();
-            if (inputResult.isFailure()) {
-                log.warning("ChatRoomPanel::renderWithData: " + inputResult.getException().getMessage());
-                return;
-            }
-            var result = chatRoomCaller.createOne(inputResult.getValue());
-            if (result.isFailure()) {
-                log.warning("ChatRoomPanel::renderWithData: " + result.getException().getMessage());
-                return;
-            }
-            Output<CreateChatRoomOutput> output = result.getValue();
-            if (output.getError() != null) {
-                log.warning("ChatRoomPanel::renderWithData: " + result.getException().getMessage());
-                return;
-            }
-            chatRoomId = output.getBody().getChatRoomId();
-        }
-        // Fetch full data of chatRoom
         GetChatRoomInput input = GetChatRoomInput.builder()
                 .chatRoomId(chatRoomId)
                 .build();
@@ -115,35 +92,58 @@ public abstract class ChatRoomPanel extends JPanel {
         receiverIds = memberIds.stream()
                 .filter(userId -> !userId.equals(AuthContext.INSTANCE.getPrincipal().getUserId())).
                 toList();
-        var result1 = this.messageCaller.getMany(GetMessagesInput.builder().chatRoomId(chatRoomId).limit(100).page(0).build());
+        var result1 = this.chatRoomCaller.getChatRoomMembers(GetChatRoomMembersInput.builder()
+                .chatRoomId(chatRoomId)
+                .build());
         if (result1.isFailure()) {
             log.warning("ChatRoomPanel::render: " + result1.getException().getMessage());
             return;
         }
-        Output<GetMessagesOutput> output1 = result1.getValue();
+        Output<GetChatRoomMembersOutput> output1 = result1.getValue();
         if (output1.getError() != null) {
-            log.warning("ChatRoomPanel::render: " + result1.getException().getMessage());
+            log.warning("ChatRoomPanel::render: " + output1.getError().getMessage());
             return;
         }
-        for (int i = output1.getBody().getItems().size() - 1; i >= 0; i--) {
-            GetMessagesOutput.Item item = output1.getBody().getItems().get(i);
+        GetChatRoomMembersOutput getChatRoomMembersOutput = output1.getBody();
+        for (GetChatRoomMembersOutput.Item item : getChatRoomMembersOutput.getItems()) {
+            memberMap.put(item.getUserId(), ChatRoom.Member.builder()
+                            .id(item.getUserId())
+                            .nickname(item.getNickname())
+                            .username(item.getUsername())
+                    .build());
+        }
+        var result2 = this.messageCaller.getMany(GetMessagesInput.builder().chatRoomId(chatRoomId).limit(100).page(0).build());
+        if (result2.isFailure()) {
+            log.warning("ChatRoomPanel::render: " + result2.getException().getMessage());
+            return;
+        }
+        Output<GetMessagesOutput> output2 = result2.getValue();
+        if (output2.getError() != null) {
+            log.warning("ChatRoomPanel::render: " + output2.getError().getMessage());
+            return;
+        }
+        for (int i = output2.getBody().getItems().size() - 1; i >= 0; i--) {
+            GetMessagesOutput.Item item = output2.getBody().getItems().get(i);
+            ChatRoom.Member sender = memberMap.get(item.getSenderId());
             Message message = Message.builder()
                     .id(item.getMessageId())
                     .chatRoomId(item.getChatRoomId())
                     .content(MessageContentMapper.fromIOToModel(item.getContent()))
-                    .senderId(item.getSenderId())
+                    .senderId(sender.getId())
+                    .senderName(sender.getNickname())
+                    .isGroup(chatRoom.isGroup())
                     .receiverIds(receiverIds)
                     .build();
-            MessagePanel messagePanel = new MessagePanel(message);
-            appendMessage(messagePanel);
+            appendMessage(message);
         }
 
     }
 
     public void handleReceiveMessage(Message message) {
         if (Objects.equals(message.getSenderId(), AuthContext.INSTANCE.getPrincipal().getUserId())) return;
-        MessagePanel messagePanel = new MessagePanel(message);
-        appendMessage(messagePanel);
+        message.setSenderName(memberMap.get(message.getSenderId()).getNickname());
+        message.setGroup(chatRoom.isGroup());
+        appendMessage(message);
     }
 
     public void handleUpdatedMessage(Message message) {
@@ -152,6 +152,7 @@ public abstract class ChatRoomPanel extends JPanel {
         if (panel != null) {
             SwingUtilities.invokeLater(() -> {
                 message.setEdited(true);
+                message.setGroup(chatRoom.isGroup());
                 panel.updateContent(message); // We'll add this method in MessagePanel
                 chatArea.revalidate();
                 chatArea.repaint();
@@ -170,6 +171,7 @@ public abstract class ChatRoomPanel extends JPanel {
                         .value("<This message was deleted>")
                         .build());
                 message.setDeleted(true);
+                message.setGroup(chatRoom.isGroup());
                 panel.updateContent(message); // We'll add this method in MessagePanel
                 chatArea.revalidate();
                 chatArea.repaint();
@@ -206,9 +208,9 @@ public abstract class ChatRoomPanel extends JPanel {
                     .senderId(AuthContext.INSTANCE.getPrincipal().getUserId())
                     .receiverIds(receiverIds)
                     .content(content)
+                    .isGroup(chatRoom.isGroup())
                     .build();
-            MessagePanel messagePanel = new MessagePanel(message);
-            appendMessage(messagePanel);
+            appendMessage(message);
             messageField.setText("");
         }
     }
@@ -246,15 +248,17 @@ public abstract class ChatRoomPanel extends JPanel {
                     return;
                 }
                 CreateMessageOutput createMessageOutput = output.getBody();
+                ChatRoom.Member sender = memberMap.get(AuthContext.INSTANCE.getPrincipal().getUserId());
                 Message message = Message.builder()
                         .id(createMessageOutput.getMessageId())
                         .chatRoomId(chatRoom.getId())
-                        .senderId(AuthContext.INSTANCE.getPrincipal().getUserId())
+                        .senderId(sender.getId())
                         .receiverIds(receiverIds)
+                        .senderName(sender.getNickname())
                         .content(content)
+                        .isGroup(chatRoom.isGroup())
                         .build();
-                MessagePanel messagePanel = new MessagePanel(message);
-                appendMessage(messagePanel);
+                appendMessage(message);
                 messageField.setText("");
             }
         } catch (IOException e) {
@@ -262,16 +266,14 @@ public abstract class ChatRoomPanel extends JPanel {
         }
     }
 
-    protected void appendMessage(MessagePanel messagePanel) {
-        String messageId = messagePanel.getMessage().getId();
-        messagePanelMap.put(messageId, messagePanel);
+    protected void appendMessage(Message message) {
+        MessagePanel messagePanel = new MessagePanel(message);
+        int preferredHeight = messagePanel.getPreferredSize().height;
+        messagePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, preferredHeight));
+        messagePanelMap.put(message.getId(), messagePanel);
         chatArea.add(messagePanel);
         chatArea.revalidate();
         chatArea.repaint();
-    }
-
-    public String getChatRoomName() {
-        return chatRoom.getName();
     }
 
     @Getter
@@ -286,7 +288,7 @@ public abstract class ChatRoomPanel extends JPanel {
             render();
         }
 
-        public void render() {
+        private void render() {
             value = message.getContent().getValue();
             if (message.getContent().getType().equals(Message.Content.Type.FILE)) {
                 Path path = Paths.get(value);
@@ -297,8 +299,22 @@ public abstract class ChatRoomPanel extends JPanel {
             setLayout(new FlowLayout(isSelf ? FlowLayout.RIGHT : FlowLayout.LEFT));
             setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-            JPanel messageContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-            messageContainer.setOpaque(false);
+            JPanel messageContainer = new JPanel();
+            messageContainer.setLayout(new BoxLayout(messageContainer, BoxLayout.Y_AXIS));
+            if (!isSelf && message.isGroup()) {
+                JLabel sender = new JLabel(message.getSenderName());
+                sender.setFont(sender.getFont().deriveFont(Font.BOLD, 11f));
+                sender.setForeground(Color.DARK_GRAY);
+                sender.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+                JPanel senderWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+                senderWrapper.setOpaque(false);
+                senderWrapper.add(sender);
+                messageContainer.add(senderWrapper);
+
+            }
+
+            JPanel messageContent = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+            messageContent.setOpaque(false);
             if (isSelf) {
                 JButton editButton = new JButton("🖋️");
                 JButton deleteButton = new JButton("🗑️");
@@ -309,64 +325,13 @@ public abstract class ChatRoomPanel extends JPanel {
                     button.setOpaque(false);
                     button.setMargin(new Insets(2, 0, 0, 1));
                 }
-
-                editButton.addActionListener(e -> {
-                    String newValue = JOptionPane.showInputDialog(this, "Edit your message:", value);
-                    if (newValue != null && !newValue.trim().isEmpty() && !newValue.equals(value)) {
-                        Content content = Content.builder()
-                                .text(newValue)
-                                .type(Content.Type.TEXT)
-                                .build();
-                        var result = this.messageCaller.update(UpdateMessageInput.builder()
-                                        .content(content)
-                                        .chatRoomId(message.getChatRoomId())
-                                        .messageId(message.getId())
-                                        .senderId(message.getSenderId())
-                                        .receiverIds(message.getReceiverIds())
-                                .build());
-                        if (result.isFailure()) {
-                            log.warning("MessagePanel::editButtonActionPerformed: " + result.getException().getMessage());
-                            return;
-                        }
-                        var output = result.getValue();
-                        if (output.getError() != null) {
-                            log.warning("MessagePanel::editButtonActionPerformed: " + output.getError().getMessage());
-                            return;
-                        }
-                        this.message.setContent(Message.Content.builder().value(newValue).type(Message.Content.Type.TEXT).build());
-                        rerender();
-                    }
-                });
-                deleteButton.addActionListener(e -> {
-                    int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this message?",
-                            "Confirm Delete", JOptionPane.YES_NO_OPTION);
-                    if (confirm == JOptionPane.YES_OPTION) {
-                        var result = this.messageCaller.delete(DeleteMessageInput.builder()
-                                        .messageId(message.getId())
-                                .chatRoomId(message.getChatRoomId())
-                                .senderId(message.getSenderId())
-                                .receiverIds(message.getReceiverIds()).build());
-                        if (result.isFailure()) {
-                            log.warning("MessagePanel::editButtonActionPerformed: " + result.getException().getMessage());
-                            return;
-                        }
-                        var output = result.getValue();
-                        if (output.getError() != null) {
-                            log.warning("MessagePanel::editButtonActionPerformed: " + output.getError().getMessage());
-                        }
-                       this.message.setContent(Message.Content.builder()
-                                .type(Message.Content.Type.TEXT)
-                                .value("<This message was deleted>")
-                                .build());
-                        this.message.setDeleted(true);
-                        rerender();
-                    }
-                });
+                editButton.addActionListener(e -> handleEditButton());
+                deleteButton.addActionListener(e -> handleDeleteButton());
                 if (!message.isDeleted()) {
                     if (message.getContent().getType().equals(Message.Content.Type.TEXT)) {
-                        messageContainer.add(editButton);
+                        messageContent.add(editButton);
                     }
-                    messageContainer.add(deleteButton);
+                    messageContent.add(deleteButton);
                 }
             }
             JLabel messageLabel = new JLabel(value);
@@ -377,59 +342,117 @@ public abstract class ChatRoomPanel extends JPanel {
                     BorderFactory.createLineBorder(Color.GRAY, 1),
                     BorderFactory.createEmptyBorder(5, 10, 5, 10)
             ));
-            messageContainer.add(messageLabel);
+            messageContent.add(messageLabel);
             if (message.isEdited()) {
                 JLabel editedLabel = new JLabel("Edited");
                 editedLabel.setOpaque(false);
                 editedLabel.setFocusable(false);
-                messageContainer.add(editedLabel);
+                messageContent.add(editedLabel);
             }
-
+            messageContainer.add(messageContent);
             add(messageContainer);
 
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent evt) {
-                    if (message.getContent().getType().equals(Message.Content.Type.TEXT)) {
-                        return;
-                    }
-                    var result = messageCaller.getOne(GetMessageInput.builder()
-                            .messageId(message.getId())
-                            .chatRoomId(message.getChatRoomId())
-                            .build());
-                    if (result.isFailure()) {
-                        log.warning("MessagePanel::mouseClicked: " + result.getException().getMessage());
-                        return;
-                    }
-                    var output = result.getValue();
-                    if (output.getError() != null) {
-                        log.warning("MessagePanel::mouseClicked: " + output.getError().getMessage());
-                        return;
-                    }
-                    Content content = output.getBody().getContent();
-                    String fileName = content.getFileName();
-                    byte[] fileData = content.getFileData();
-                    JFileChooser fileChooser = new JFileChooser();
-                    fileChooser.setSelectedFile(new File(fileName));
-                    int userSelection = fileChooser.showSaveDialog(MessagePanel.this);
-
-                    if (userSelection == JFileChooser.APPROVE_OPTION) {
-                        File saveFile = fileChooser.getSelectedFile();
-                        try (FileOutputStream fos = new FileOutputStream(saveFile)) {
-                            fos.write(fileData);
-                            JOptionPane.showMessageDialog(MessagePanel.this,
-                                    "File saved to:\n" + saveFile.getAbsolutePath(),
-                                    "Download Complete",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                        } catch (IOException ex) {
-                            JOptionPane.showMessageDialog(MessagePanel.this,
-                                    "Failed to save file: " + ex.getMessage(),
-                                    "Error",
-                                    JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
+                    handleMouseClicked();
                 }
             });
+        }
+
+        private void handleEditButton() {
+            String newValue = JOptionPane.showInputDialog(this, "Edit your message:", value);
+            if (newValue != null && !newValue.trim().isEmpty() && !newValue.equals(value)) {
+                Content content = Content.builder()
+                        .text(newValue)
+                        .type(Content.Type.TEXT)
+                        .build();
+                var result = this.messageCaller.update(UpdateMessageInput.builder()
+                        .content(content)
+                        .chatRoomId(message.getChatRoomId())
+                        .messageId(message.getId())
+                        .senderId(message.getSenderId())
+                        .receiverIds(message.getReceiverIds())
+                        .build());
+                if (result.isFailure()) {
+                    log.warning("MessagePanel::editButtonActionPerformed: " + result.getException().getMessage());
+                    return;
+                }
+                var output = result.getValue();
+                if (output.getError() != null) {
+                    log.warning("MessagePanel::editButtonActionPerformed: " + output.getError().getMessage());
+                    return;
+                }
+                this.message.setContent(Message.Content.builder().value(newValue).type(Message.Content.Type.TEXT).build());
+                rerender();
+            }
+        }
+
+        private void handleDeleteButton() {
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this message?",
+                    "Confirm Delete", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                var result = this.messageCaller.delete(DeleteMessageInput.builder()
+                        .messageId(message.getId())
+                        .chatRoomId(message.getChatRoomId())
+                        .senderId(message.getSenderId())
+                        .receiverIds(message.getReceiverIds()).build());
+                if (result.isFailure()) {
+                    log.warning("MessagePanel::editButtonActionPerformed: " + result.getException().getMessage());
+                    return;
+                }
+                var output = result.getValue();
+                if (output.getError() != null) {
+                    log.warning("MessagePanel::editButtonActionPerformed: " + output.getError().getMessage());
+                }
+                this.message.setContent(Message.Content.builder()
+                        .type(Message.Content.Type.TEXT)
+                        .value("<This message was deleted>")
+                        .build());
+                this.message.setDeleted(true);
+                rerender();
+            }
+        }
+
+        private void handleMouseClicked() {
+            if (message.getContent().getType().equals(Message.Content.Type.TEXT)) {
+                return;
+            }
+            var result = messageCaller.getOne(GetMessageInput.builder()
+                    .messageId(message.getId())
+                    .chatRoomId(message.getChatRoomId())
+                    .build());
+            if (result.isFailure()) {
+                log.warning("MessagePanel::mouseClicked: " + result.getException().getMessage());
+                return;
+            }
+            var output = result.getValue();
+            if (output.getError() != null) {
+                log.warning("MessagePanel::mouseClicked: " + output.getError().getMessage());
+                return;
+            }
+            Content content = output.getBody().getContent();
+            String fileName = content.getFileName();
+            byte[] fileData = content.getFileData();
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setSelectedFile(new File(fileName));
+            int userSelection = fileChooser.showSaveDialog(MessagePanel.this);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File saveFile = fileChooser.getSelectedFile();
+                try (FileOutputStream fos = new FileOutputStream(saveFile)) {
+                    fos.write(fileData);
+                    JOptionPane.showMessageDialog(MessagePanel.this,
+                            "File saved to:\n" + saveFile.getAbsolutePath(),
+                            "Download Complete",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(MessagePanel.this,
+                            "Failed to save file: " + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
         }
 
         public void updateContent(Message message) {

@@ -19,4 +19,17 @@ public class ChatRoom {
     private List<String> userIds;
     private Date createdAt;
     private Date updatedAt;
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
+
+    @Builder
+    @Getter
+    public static class Member {
+        private String id;
+        private String nickname;
+        private String username;
+    }
 }

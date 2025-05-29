@@ -42,12 +42,16 @@ public class EventDispatcher implements Runnable {
                     }
                     break;
                 case USER_LOGIN:
-                    if (observer instanceof UserLoginObserver userLoginObserver) {
-                        userLoginObserver.onEvent(event);
+                    if (observer instanceof UserObserver userObserver) {
+                        userObserver.onEvent(event);
                     }
                     break;
                 default:
                     break;
+                case CREATE_CHAT_ROOM:
+                    if (observer instanceof ChatRoomObserver chatRoomObserver) {
+                        chatRoomObserver.onEvent(event);
+                    }
             }
         }
     }

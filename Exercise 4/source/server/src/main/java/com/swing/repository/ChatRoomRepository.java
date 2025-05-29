@@ -30,14 +30,13 @@ public class ChatRoomRepository {
         this.db = db;
     }
     public Result<Void> createOne(ChatRoom chatRoom) {
-        String sql = "INSERT INTO " + TABLE_NAME +" (id, name, is_group, created_at) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO " + TABLE_NAME +" (id, name, is_group) VALUES (?, ?, ?)";
         int columnIndex = 1;
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(columnIndex++, chatRoom.getId());
             stmt.setString(columnIndex++, chatRoom.getName());
-            stmt.setBoolean(columnIndex++, chatRoom.getIsGroup());
-            stmt.setDate(columnIndex, new Date(new java.util.Date().getTime()));
+            stmt.setBoolean(columnIndex, chatRoom.getIsGroup());
             stmt.executeUpdate();
             log.info("chatRoomUser created successfully.");
             return Result.success(null);

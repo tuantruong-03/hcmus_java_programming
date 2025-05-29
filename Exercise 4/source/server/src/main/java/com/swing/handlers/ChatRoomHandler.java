@@ -230,4 +230,43 @@ public class ChatRoomHandler {
         context.setOutput(output);
     }
 
+    public void findMembers(InputContext<GetChatRoomMembersInput, GetChatRoomMembersOutput> context) {
+        Input<GetChatRoomMembersInput> input = context.getInput();
+        GetChatRoomMembersInput body = input.getBody();
+        var result1 = chatRoomUserRepository.findMany(ChatRoomUserRepository.Query.builder()
+                        .chatRoomId(body.getChatRoomId())
+                .build());
+        if (result1.isFailure()) {
+            log.warning("failed to findMembers: " + result1.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
+            context.setOutput(Output.<GetChatRoomMembersOutput>builder().error(error).build());
+            return;
+        }
+        List<ChatRoomUser> chatRoomUsers = result1.getValue();
+        List<String> memberIds = chatRoomUsers.stream().map(ChatRoomUser::getUserId).toList();
+        var result2 = userRepository.findMany(UserRepository.Query.builder()
+        .inUserIds(memberIds)
+                .build());
+        if (result2.isFailure()) {
+            log.warning("failed to findMembers: " + result1.getException().getMessage());
+            Output.Error error = Output.Error.interalServerError();
+            context.setStatus(InputContext.Status.INTERNAL_SERVER_ERROR);
+            context.setOutput(Output.<GetChatRoomMembersOutput>builder().error(error).build());
+            return;
+        }
+        List<User> users = result2.getValue();
+        List<GetChatRoomMembersOutput.Item> items = users.stream()
+                .map(u -> GetChatRoomMembersOutput.Item.builder()
+                        .userId(u.getId())
+                        .nickname(u.getName())
+                        .username(u.getUsername())
+                        .build())
+                .toList();
+        context.setStatus(InputContext.Status.OK);
+        context.setOutput(Output.<GetChatRoomMembersOutput>builder()
+                .body(GetChatRoomMembersOutput.builder().items(items).build())
+                .build());
+    }
+
 }

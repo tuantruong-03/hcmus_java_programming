@@ -104,4 +104,24 @@ public class ChatRoomCaller {
         }
     }
 
+    public Result<Output<GetChatRoomMembersOutput>> getChatRoomMembers(GetChatRoomMembersInput input) {
+        try (Socket clientSocket = new Socket(socketConnection.getHost(), socketConnection.getPort());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8))) {
+            Input<GetChatRoomMembersInput> in = CallerUtils.INSTANCE.buildInputWithToken();
+            in.setCommand(Input.Command.GET_CHAT_ROOM_MEMBERS);
+            in.setBody(input);
+            String jsonString = mapper.writeValueAsString(in);
+            writer.write(jsonString);
+            writer.newLine();writer.flush();
+            String responseJson = reader.readLine();
+            log.info("Server response: " + responseJson);
+            Output<GetChatRoomMembersOutput> output = mapper.readValue(responseJson,
+                    new TypeReference<>() {});
+            return Result.success(output);
+        } catch (IOException ex) {
+            return Result.failure(ex);
+        }
+    }
+
 }

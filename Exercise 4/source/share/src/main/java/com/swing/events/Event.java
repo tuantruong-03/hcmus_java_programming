@@ -1,5 +1,6 @@
 package com.swing.events;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,6 +27,8 @@ public class Event {
         SEND_MESSAGE,
         DELETE_MESSAGE,
         UPDATE_MESSAGE,
+
+        CREATE_CHAT_ROOM,
     }
 
     @Getter
@@ -45,8 +48,8 @@ public class Event {
     }
 
     @Getter
-    @Builder
     @NoArgsConstructor
+    @Builder
     @AllArgsConstructor
     public static class SendMessagePayload {
         private String messageId;
@@ -70,8 +73,8 @@ public class Event {
     }
 
     @Getter
-    @Builder
     @NoArgsConstructor
+    @Builder
     @AllArgsConstructor
     public static class UpdateMessagePayload {
         private String messageId;
@@ -79,6 +82,18 @@ public class Event {
         private MessageContent content;
         private String senderId;
         private List<String> receiverIds;
+
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CreateChatRoomPayload {
+        private String chatRoomId;
+        private String chatRoomName;
+        private List<String> memberIds;
+        @JsonProperty("group")
+        private boolean isGroup;
 
     }
 }

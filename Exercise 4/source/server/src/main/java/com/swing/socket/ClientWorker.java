@@ -24,6 +24,7 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Log
@@ -76,8 +77,7 @@ public class ClientWorker implements Runnable {
                 if (response.isFailure()) {
                     Output<Void> output = Output.<Void>builder().error(Output.Error.interalServerError()).build();
                     this.write(output);
-                }
-                else this.write(response.getValue());
+                } else this.write(response.getValue());
             } catch (IOException e) {
                 log.warning("Client disconnected or error: " + e.getMessage());
                 socketManager.removeClient(clientId);
@@ -115,8 +115,14 @@ public class ClientWorker implements Runnable {
                 case GET_MY_PROFILE -> {
                     Input<Void> input = mapper.treeToValue(rootNode, new TypeReference<>() {
                     });
-                    InputContext<Void, UserOutput> ctx = new InputContext<>(input);
+                    InputContext<Void, GetUserOutput> ctx = new InputContext<>(input);
                     return handleGetMyProfileCommand(ctx);
+                }
+                case GET_USERS -> {
+                    Input<GetUsersInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
+                    InputContext<GetUsersInput, GetUsersOutput> ctx = new InputContext<>(input);
+                    return handleGetUsersCommand(ctx);
                 }
                 case GET_CHAT_ROOM -> {
                     Input<GetChatRoomInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
@@ -135,6 +141,12 @@ public class ClientWorker implements Runnable {
                     });
                     InputContext<CheckChatRoomExistenceInput, CheckChatRoomExistenceOutput> ctx = new InputContext<>(input);
                     return handleCheckChatRoomExistence(ctx);
+                }
+                case GET_CHAT_ROOM_MEMBERS -> {
+                    Input<GetChatRoomMembersInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
+                    });
+                    InputContext<GetChatRoomMembersInput, GetChatRoomMembersOutput> ctx = new InputContext<>(input);
+                    return handleGetChatRoomMembersCommand(ctx);
                 }
                 case GET_MESSAGE -> {
                     Input<GetMessageInput> input = mapper.treeToValue(rootNode, new TypeReference<>() {
@@ -208,12 +220,30 @@ public class ClientWorker implements Runnable {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, chatRoomHandler::createOne)
                 .handle();
+        if (inputContext.getOutput().getError() == null) {
+            CreateChatRoomInput inputBody = inputContext.getInput().getBody();
+            CreateChatRoomOutput outputBody = inputContext.getOutput().getBody();
+            List<String> memberIds = inputBody.getOtherUserIds();
+            String myUserId = inputContext.getPrincipal().getUserId();
+            memberIds.add(myUserId);
+            Event.CreateChatRoomPayload createChatRoomPayload = new Event.CreateChatRoomPayload(outputBody.getChatRoomId(), inputBody.getName(), memberIds, inputBody.isGroup());
+            Event event = new Event(Event.Type.CREATE_CHAT_ROOM, createChatRoomPayload);
+            emitEvent(event);
+        }
         return Result.success(inputContext.getOutput());
     }
 
-    private Result<Output<?>> handleGetMyProfileCommand(InputContext<Void, UserOutput> inputContext) {
+    private Result<Output<?>> handleGetMyProfileCommand(InputContext<Void, GetUserOutput> inputContext) {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, userHandler::findMyProfile)
+                .handle();
+        return Result.success(inputContext.getOutput());
+    }
+
+
+    private Result<Output<?>> handleGetUsersCommand(InputContext<GetUsersInput, GetUsersOutput> inputContext) {
+        HandlerRegistry.withInputContext(inputContext)
+                .register(authHandler::authenticate, userHandler::findMany)
                 .handle();
         return Result.success(inputContext.getOutput());
     }
@@ -229,6 +259,13 @@ public class ClientWorker implements Runnable {
     private Result<Output<?>> handleGetChatRoomsCommand(InputContext<GetChatRoomsInput, GetChatRoomsOutput> inputContext) {
         HandlerRegistry.withInputContext(inputContext)
                 .register(authHandler::authenticate, chatRoomHandler::findMyChatRooms)
+                .handle();
+        return Result.success(inputContext.getOutput());
+    }
+
+    private Result<Output<?>> handleGetChatRoomMembersCommand(InputContext<GetChatRoomMembersInput, GetChatRoomMembersOutput> inputContext) {
+        HandlerRegistry.withInputContext(inputContext)
+                .register(authHandler::authenticate, chatRoomHandler::findMembers)
                 .handle();
         return Result.success(inputContext.getOutput());
     }
@@ -356,7 +393,7 @@ public class ClientWorker implements Runnable {
 
     public Exception onEvent(Event event) {
         switch (event.getType()) {
-            case USER_LOGIN, SEND_MESSAGE, UPDATE_MESSAGE, DELETE_MESSAGE:
+            case USER_LOGIN, SEND_MESSAGE, UPDATE_MESSAGE, DELETE_MESSAGE, CREATE_CHAT_ROOM:
                 return eventPublisher.publish(event);
             case USER_LOGOUT:
                 break;
