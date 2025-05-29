@@ -82,11 +82,16 @@ public abstract class ChatRoomPanel extends JPanel {
                 .build();
         var result = chatRoomCaller.getChatRoom(input);
         if (result.isFailure()) {
-            log.warning("MainChatPanels::render: " + result.getException().getMessage());
+            log.warning("ChatRoomPanel::render: " + result.getException().getMessage());
             return;
         }
-        GetChatRoomOutput output = result.getValue().getBody();
-        Collection<String> memberIds = output.getMembers().keySet();
+        Output<GetChatRoomOutput> output = result.getValue();
+        if (output.getError() != null) {
+            log.warning("ChatRoomPanel::render: " + output.getError().getMessage());
+            return;
+        }
+        GetChatRoomOutput outputBody = result.getValue().getBody();
+        Collection<String> memberIds = outputBody.getMembers().keySet();
         chatRoom.setUserIds(memberIds.stream().toList());
         receiverIds = memberIds.stream()
                 .filter(userId -> !userId.equals(AuthContext.INSTANCE.getPrincipal().getUserId())).
@@ -198,7 +203,7 @@ public abstract class ChatRoomPanel extends JPanel {
             }
             var output = result.getValue();
             if (output.getError() != null) {
-                log.warning("ChatRoomPanel::sendMessage: " + result.getException().getMessage());
+                log.warning("ChatRoomPanel::sendMessage: " + output.getError().getMessage());
                 return;
             }
             CreateMessageOutput createMessageOutput = output.getBody();

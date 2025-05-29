@@ -65,7 +65,7 @@ public class MainChatPanel extends JPanel {
             if (output.getError().getCode() == Output.Error.Code.NOT_FOUND) {
                 chatRoomExists = false;
             } else {
-                log.warning("MainChatPanels::handleOtherUserLogin: " + result.getException().getMessage());
+                log.warning("MainChatPanels::handleOtherUserLogin: " + output.getError().getMessage());
                 return;
             }
         }
@@ -84,17 +84,17 @@ public class MainChatPanel extends JPanel {
                 .isGroup(false)
                 .build();
         if (inputResult.isFailure()) {
-            log.warning("ChatRoomPanel::renderWithData: " + inputResult.getException().getMessage());
+            log.warning("ChatRoomPanel::handleOtherUserLogin: " + inputResult.getException().getMessage());
             return;
         }
         var result1 = chatRoomCaller.createOne(inputResult.getValue());
         if (result1.isFailure()) {
-            log.warning("ChatRoomPanel::renderWithData: " + result.getException().getMessage());
+            log.warning("ChatRoomPanel::handleOtherUserLogin: " + result1.getException().getMessage());
             return;
         }
         Output<CreateChatRoomOutput> output1 = result1.getValue();
         if (output1.getError() != null) {
-            log.warning("ChatRoomPanel::renderWithData: " + result.getException().getMessage());
+            log.warning("ChatRoomPanel::handleOtherUserLogin: " + output1.getError().getMessage());
             return;
         }
         String chatRoomId = output1.getBody().getChatRoomId();
@@ -116,6 +116,10 @@ public class MainChatPanel extends JPanel {
         setLayout(new BorderLayout());
 
         chatRoomListModel = new DefaultListModel<>();
+        chatRoomListModel.addElement(ChatRoom.builder()
+                .name(String.format("Me (%s)", AuthContext.INSTANCE.getPrincipal().getName()))
+                        .isGroup(false)
+                .build());
         chatRoomList = new JList<>(chatRoomListModel);
         chatRoomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         chatRoomList.addListSelectionListener(e -> {

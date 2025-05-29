@@ -7,7 +7,7 @@ import java.awt.*;
 
 public class MainFrame extends JFrame  {
     private final CardLayout cardLayout;
-    private final DatabaseConnectionPanel databaseConnectionPanel;
+    private final RunServerPanel runServerPanel;
 
     public MainFrame() {
         super("Chat Server");
@@ -15,9 +15,9 @@ public class MainFrame extends JFrame  {
         setSize(800, 600);
         cardLayout = new CardLayout();
         setLayout(cardLayout);
-        databaseConnectionPanel = new DatabaseConnectionPanel();
+        runServerPanel = new RunServerPanel();
 
-        add(databaseConnectionPanel, Children.CONNECT.getName());
+        add(runServerPanel, Children.CONNECT.getName());
         setVisible(true);
     }
 

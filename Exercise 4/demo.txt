@@ -5,4 +5,9 @@ Thông tin kết nối Database:
 - Password: Tuantruong131203
 Thông tin kết nối server:
 - Host: 127.0.0.1
-- Port: 8080
+- Port:
+Dang nhap:
+tuan.truong
+joe.man
+jane.bach
+123456

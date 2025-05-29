@@ -22,33 +22,37 @@ class RegisterPanel extends JPanel {
     JLabel errorLabel;
 
     public RegisterPanel(AuthPanel parent) {
-        super(new GridLayout(5, 2, 5, 5));  // Adjusted layout for the error message
+        super(new GridLayout(4, 2, 5, 5));  // Adjusted layout for the error message
         setBorder(BorderFactory.createTitledBorder("Register"));
         this.authCaller = ApplicationContext.getInstance().getAuthCaller();
         this.parent = parent;
         // Name field
         add(new JLabel("Name:"));
-        nameField = new JTextField("Jane Bach");
+//        nameField = new JTextField("Jane Bach");
+        nameField = new JTextField();
         add(nameField);
 
         // Username field
         add(new JLabel("Username:"));
-        usernameField = new JTextField("jane.bach");
+//        usernameField = new JTextField("jane.bach");
+        usernameField = new JTextField();
         add(usernameField);
 
         // Password field
         add(new JLabel("Password:"));
-        passwordField = new JPasswordField("123456");
+//        passwordField = new JPasswordField("123456");
+        passwordField = new JPasswordField();
         add(passwordField);
 
         JButton registerButton = new JButton("Register");
         registerButton.setFont(new Font("Arial", Font.PLAIN, 12));  // Smaller font
         registerButton.setPreferredSize(new Dimension(80, 30));     // Smaller button size
-        add(registerButton);
-
         errorLabel = new JLabel("");
         errorLabel.setForeground(Color.RED);
         add(errorLabel);
+        add(registerButton);
+
+
 
         // Register button action listener
         registerButton.addActionListener(this::handleRegisterButton);

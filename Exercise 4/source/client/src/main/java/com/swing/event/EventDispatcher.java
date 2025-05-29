@@ -7,13 +7,14 @@ import lombok.extern.java.Log;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Log
 public class EventDispatcher implements Runnable {
 
     private final BufferedReader reader;
     private final ObjectMapper mapper;
-    private final Map<String,EventObserver> observers = new HashMap<>();
+    private final Map<String,EventObserver> observers = new ConcurrentHashMap<>();
 
     public EventDispatcher(BufferedReader reader) {
         this.reader = reader;
@@ -36,7 +37,7 @@ public class EventDispatcher implements Runnable {
         return observers.get(name);
     }
 
-    private void dispatch(Event event) {
+    private synchronized void dispatch(Event event) {
         Event.Type type = event.getType();
         for (EventObserver observer : observers.values()) {
             switch (type) {

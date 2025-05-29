@@ -20,25 +20,14 @@ public class SocketManager { //NOSONAR
     }
 
 
-    public static SocketManager init() throws RuntimeException {
+    public static SocketManager init(int port) throws RuntimeException, IOException {
         if (socketManager != null) {
             throw new IllegalStateException("SocketManager has already been initialized");
         }
         socketManager = new SocketManager();
         socketManager.clients = new HashMap<>();
-        try (InputStream input = SocketManager.class.getClassLoader().getResourceAsStream("application.properties")) {
-            Properties props = new Properties();
-            if (input == null) {
-                throw new IllegalStateException("Unable to find application.properties");
-            }
-            props.load(input);
-            String port = props.getProperty("server.port");
-            socketManager.serverSocket = new ServerSocket(Integer.parseInt(port));
-
-        } catch (Exception e) {
-            log.warning(e.getMessage());
-            throw new IllegalStateException("Failed to initialize SocketContext", e);
-        }
+        socketManager.serverSocket = new ServerSocket(port);
+        log.info("SocketManager is running on: " + socketManager.serverSocket.getInetAddress().getHostName() + ":" + socketManager.serverSocket.getLocalPort());
         return socketManager;
     }
 
@@ -58,7 +47,7 @@ public class SocketManager { //NOSONAR
         clients.put(clientWorker.getClientId(), clientWorker);
     }
 
-    public void onEvent(Event event) {
+    public synchronized void onEvent(Event event) {
         switch (event.getType()) {
             case Event.Type.USER_LOGIN:
                 Event.LoginPayload loginPayload = (Event.LoginPayload) event.getPayload();

@@ -31,11 +31,13 @@ class LoginPanel extends JPanel {
         this._parent = parent;
         setBorder(BorderFactory.createTitledBorder("Login"));
         add(new JLabel("Username:"));
-        usernameField = new JTextField("tuan.truon");
+//        usernameField = new JTextField("tuan.truon");
+        usernameField = new JTextField();
         add(usernameField);
 
         add(new JLabel("Password:"));
-        passwordField = new JPasswordField("123456");
+//        passwordField = new JPasswordField("123456");
+        passwordField = new JPasswordField();
         add(passwordField);
 
         JButton loginButton = new JButton("Login");
@@ -61,7 +63,6 @@ class LoginPanel extends JPanel {
             errorLabel.setText("Login failed: " + buildRequestResult.getException().getMessage());
             return;
         }
-        errorLabel.setForeground(new Color(0, 128, 0));  // Success color (green)
         Result<Output<LoginUserOutput>> loginResult = authCaller.login(buildRequestResult.getValue());
         if (loginResult.isFailure()) {
             log.warning("failed to login: " + loginResult.getException());
@@ -91,6 +92,7 @@ class LoginPanel extends JPanel {
             errorLabel.setText("Login failed, please try again" + exception.getMessage());
             return;
         }
+        errorLabel.setForeground(new Color(0, 128, 0));  // Success color (green)
         errorLabel.setText("Login successfully!");
         _parent.onLoginSuccess();
     }
