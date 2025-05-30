@@ -21,18 +21,15 @@ public class RunServerPanel extends JPanel {
         JPanel inputPanel = new JPanel(new GridLayout(5, 2, 10, 10));
 
         inputPanel.add(new JLabel("Database URL:"));
-//        urlField = new JTextField("jdbc:mysql://localhost:3306");
-        urlField = new JTextField();
+        urlField = new JTextField("jdbc:mysql://localhost:3306");
         inputPanel.add(urlField);
 
         inputPanel.add(new JLabel("Database Name:"));
-//        dbNameField = new JTextField("chat_app");
-        dbNameField = new JTextField();
+        dbNameField = new JTextField("chat_app");
         inputPanel.add(dbNameField);
 
         inputPanel.add(new JLabel("Database User:"));
-//        userField = new JTextField("root");
-        userField = new JTextField();
+        userField = new JTextField("root");
         inputPanel.add(userField);
 
         inputPanel.add(new JLabel("Database Password:"));
